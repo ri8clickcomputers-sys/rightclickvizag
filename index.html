@@ -2,82 +2,163 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Right Click Computers | Premium Sales & Service</title>
+<title>Rightclick Computers</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
 <style>
 body{
-    background:#03050d;
-    color:white;
-    font-family:'Outfit',sans-serif;
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#0f0f0f;
+    color:#fff;
 }
-.review-popup{
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.8);
-    display:none;
-    justify-content:center;
+nav{
+    background:#000;
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
     align-items:center;
-    z-index:9999;
 }
-.popup-box{
+nav h2{
+    color:#FFD700;
+    margin:0;
+}
+nav a{
+    color:#FFD700;
+    text-decoration:none;
+    font-weight:bold;
+    cursor:pointer;
+}
+.container{
+    padding:50px;
+    text-align:center;
+}
+button{
+    background:#FFD700;
+    border:none;
+    padding:12px 25px;
+    border-radius:25px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+/* Review Popup */
+#reviewPopup{
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.85);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+}
+#reviewBox{
     background:#111;
     padding:25px;
     border-radius:15px;
     width:90%;
     max-width:500px;
 }
-.popup-box textarea{
+#reviewBox h3{
+    color:#FFD700;
+    margin-top:0;
+}
+#reviewText{
     width:100%;
-    height:120px;
+    height:100px;
     border-radius:10px;
     border:none;
     padding:10px;
     font-size:14px;
 }
-.popup-box button{
-    margin-top:10px;
-    padding:10px 20px;
-    border:none;
-    border-radius:25px;
-    cursor:pointer;
-    font-weight:bold;
+.popup-buttons{
+    margin-top:15px;
+    display:flex;
+    justify-content:space-between;
 }
-.btn-copy{background:#FFD700;color:black;}
-.btn-cancel{background:#333;color:white;}
+.cancel{
+    background:#333;
+    color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<!-- REVIEW BUTTON -->
-<button onclick="openReview()" style="
-position:fixed;
-bottom:30px;
-left:30px;
-padding:12px 20px;
-border-radius:30px;
-border:none;
-background:#FFD700;
-font-weight:700;
-cursor:pointer;">
-Give Review
-</button>
+<nav>
+    <h2>rightclick computers</h2>
+    <a onclick="openReview()">GIVE REVIEW</a>
+</nav>
 
-<!-- POPUP -->
-<div class="review-popup" id="reviewPopup">
-    <div class="popup-box">
-        <h3>Edit your review if you want:</h3>
-        <textarea id="reviewText"></textarea><br>
-        <button class="btn-copy" onclick="copyAndOpen()">Copy & Go To Google</button>
-        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+<div class="container">
+    <h1>Welcome to Rightclick Computers</h1>
+    <p>Professional Computer Sales & Service Center</p>
+    <button onclick="openReview()">Write a Review</button>
+</div>
+
+<!-- Review Assistant Popup -->
+<div id="reviewPopup">
+    <div id="reviewBox">
+        <h3>Edit your review (20 words approx):</h3>
+        <textarea id="reviewText"></textarea>
+        <div class="popup-buttons">
+            <button onclick="copyAndOpen()">Copy & Go to Google</button>
+            <button class="cancel" onclick="closePopup()">Cancel</button>
+        </div>
     </div>
 </div>
 
 <script>
 const starters = [
-"Excellent service","Outstanding experience","Highly satisfied","Very impressed",
-"Amazing support","
+ "Excellent service","Amazing experience","Highly satisfied",
+ "Very impressed","Outstanding support","Professional service",
+ "Great technical help","Fast and reliable service"
+];
+
+const middles = [
+ "from Rightclick Computers with quick diagnosis",
+ "with honest pricing and skilled technicians",
+ "where my laptop was repaired perfectly",
+ "with smooth and friendly customer handling",
+ "for fast and accurate problem fixing",
+ "for transparent and quality service"
+];
+
+const endings = [
+ "Highly recommended.",
+ "Best service in Vizag.",
+ "Completely trustworthy.",
+ "Will visit again.",
+ "Very happy with service.",
+ "Truly professional work."
+];
+
+function generateReview(){
+    const s = starters[Math.floor(Math.random()*starters.length)];
+    const m = middles[Math.floor(Math.random()*middles.length)];
+    const e = endings[Math.floor(Math.random()*endings.length)];
+    return `${s} ${m}. ${e}`;
+}
+
+function openReview(){
+    document.getElementById("reviewPopup").style.display="flex";
+    document.getElementById("reviewText").value = generateReview();
+}
+
+function closePopup(){
+    document.getElementById("reviewPopup").style.display="none";
+}
+
+function copyAndOpen(){
+    const text = document.getElementById("reviewText").value;
+    navigator.clipboard.writeText(text).then(()=>{
+        alert("Review copied! Paste it on Google.");
+        window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review","_blank");
+    });
+}
+</script>
+
+</body>
+</html>
