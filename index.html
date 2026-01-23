@@ -2,212 +2,82 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Right Click Computers | Premium Sales & Service</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
 <style>
-:root{
-    --primary:#FFD700;
-    --secondary:#00f2ff;
-    --bg:#03050d;
-    --glass:rgba(255,255,255,0.03);
-    --border:rgba(255,255,255,0.1);
-}
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Outfit',sans-serif;}
-body{background:var(--bg);color:#fff;overflow-x:hidden;}
-
-.whatsapp-float{
-    position:fixed;
-    bottom:30px;
-    right:30px;
-    background:#25d366;
+body{
+    background:#03050d;
     color:white;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    text-align:center;
-    font-size:30px;
-    box-shadow:0 10px 25px rgba(37,211,102,0.3);
-    z-index:9999;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-decoration:none;
-    transition:.3s;
+    font-family:'Outfit',sans-serif;
 }
-.whatsapp-float:hover{transform:scale(1.1);}
-
-nav{
+.review-popup{
     position:fixed;
-    width:100%;
-    padding:20px 8%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    z-index:1000;
-    transition:.5s;
-    background:rgba(3,5,13,0.8);
-    backdrop-filter:blur(15px);
-}
-.logo{
-    font-size:1.8rem;
-    font-weight:800;
-    background:linear-gradient(90deg,#fff,var(--primary));
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-
-.hero{
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
-    overflow:hidden;
-}
-.hero-video{
-    position:absolute;
     top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+.popup-box{
+    background:#111;
+    padding:25px;
+    border-radius:15px;
+    width:90%;
+    max-width:500px;
+}
+.popup-box textarea{
     width:100%;
-    height:100%;
-    object-fit:cover;
-    opacity:.3;
-    z-index:-1;
+    height:120px;
+    border-radius:10px;
+    border:none;
+    padding:10px;
+    font-size:14px;
 }
-.hero-content{text-align:center;max-width:900px;padding:0 20px;}
-.hero-content h1{
-    font-size:clamp(3rem,10vw,6rem);
-    font-weight:800;
-    line-height:1;
-    margin-bottom:20px;
-}
-.highlight{
-    color:var(--primary);
-    text-shadow:0 0 30px rgba(255,215,0,0.5);
-}
-
-.btn-black{
-    background:#000;
-    color:#fff;
-    padding:20px 40px;
-    border-radius:50px;
-    text-decoration:none;
-    font-weight:700;
-    display:inline-block;
-    transition:.3s;
-    margin-top:30px;
+.popup-box button{
+    margin-top:10px;
+    padding:10px 20px;
+    border:none;
+    border-radius:25px;
     cursor:pointer;
+    font-weight:bold;
 }
-
-.review-strip{
-    background:var(--primary);
-    color:#000;
-    padding:20px 0;
-    overflow:hidden;
-    white-space:nowrap;
-    display:flex;
-}
-.scrolling-text{
-    animation:scroll 30s linear infinite;
-    font-weight:800;
-    font-size:1.5rem;
-}
-@keyframes scroll{
-    0%{transform:translateX(0);}
-    100%{transform:translateX(-100%);}
-}
-
-footer{
-    padding:50px 8%;
-    border-top:1px solid var(--border);
-    text-align:center;
-    color:#666;
-}
+.btn-copy{background:#FFD700;color:black;}
+.btn-cancel{background:#333;color:white;}
 </style>
 </head>
 
 <body>
 
-<a href="https://wa.me/919059895427" class="whatsapp-float" target="_blank">
-<i class="fab fa-whatsapp"></i>
-</a>
-
-<nav>
-<div class="logo">RIGHT CLICK</div>
-<div style="display:flex;gap:20px;">
-<a href="tel:+919059895427" style="color:var(--primary);text-decoration:none;font-weight:700;">CALL EXPERT</a>
-
 <!-- REVIEW BUTTON -->
-<a onclick="openReview()" style="color:var(--primary);text-decoration:none;font-weight:700;cursor:pointer;">
-GIVE REVIEW
-</a>
-</div>
-</nav>
+<button onclick="openReview()" style="
+position:fixed;
+bottom:30px;
+left:30px;
+padding:12px 20px;
+border-radius:30px;
+border:none;
+background:#FFD700;
+font-weight:700;
+cursor:pointer;">
+Give Review
+</button>
 
-<section class="hero">
-<img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video">
-<div class="hero-content" data-aos="zoom-out">
-<p style="text-transform:uppercase;letter-spacing:5px;color:var(--primary);font-weight:600;">
-Premier IT Hub Midhilapur
-</p>
-<h1>Expertise You Can <span class="highlight">Trust.</span></h1>
-<p style="color:#ccc;font-size:1.2rem;margin-bottom:40px;">
-Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.
-</p>
-<a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black" style="background:var(--primary);color:#000;">
-VISIT OUR STORE
-</a>
-</div>
-</section>
-
-<div class="review-strip">
-<div class="scrolling-text">
- • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
-</div>
+<!-- POPUP -->
+<div class="review-popup" id="reviewPopup">
+    <div class="popup-box">
+        <h3>Edit your review if you want:</h3>
+        <textarea id="reviewText"></textarea><br>
+        <button class="btn-copy" onclick="copyAndOpen()">Copy & Go To Google</button>
+        <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+    </div>
 </div>
 
-<footer>
-<p>© 2026 Right Click Computers. Designed for Performance.</p>
-</footer>
-
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-AOS.init({duration:1000,once:true});
-
-/*
-Each review is ~70 words.
-One is randomly selected every time the button is clicked,
-so repetition is highly avoided.
-You can keep adding more reviews to this array anytime.
-*/
-
-const reviews = [
-`Right Click Computers gave me an excellent service experience. The staff was friendly, highly skilled, and quick in diagnosing my laptop issue. Their chip level repair knowledge is outstanding and the quality of work is truly professional. Pricing was fair and transparent. They handled my device with great care and delivered it on time. I strongly recommend Right Click Computers for reliable repairs, honest service, and expert technical solutions in Visakhapatnam.`,
-
-`I had a wonderful experience with Right Click Computers. The team was very professional and explained the problem in a simple and clear way. Their technical expertise and chip level repair skills are impressive. Service was fast, pricing was reasonable, and there were no hidden charges. Customer support was excellent. I highly recommend them for trustworthy computer repairs and quality service in Visakhapatnam.`,
-
-`Right Click Computers exceeded my expectations with their service quality. They quickly identified the issue and fixed my system perfectly. The technicians are knowledgeable and very patient while answering questions. Their transparent pricing and timely delivery make them stand out. I felt confident leaving my device with them. Highly recommended for professional repairs and dependable computer services in Vizag.`,
-
-`Amazing service from Right Click Computers. The team is extremely skilled and understands technology deeply. My laptop was repaired faster than I expected and works perfectly now. They maintain honesty in pricing and professionalism in communication. Customer satisfaction is clearly their priority. I would surely suggest this place for expert computer repairs and genuine service in Visakhapatnam.`,
-
-`Right Click Computers is the best service center I have visited. Their diagnosis was accurate and the repair was done efficiently. The technicians are experienced, polite, and very supportive. Service quality is top class and pricing is fair. They truly care about customer trust. I recommend them for anyone seeking reliable and professional computer solutions in Vizag.`
-];
-
-function openReview(){
-
-// Pick a random review
-const randomReview = reviews[Math.floor(Math.random() * reviews.length)];
-
-navigator.clipboard.writeText(randomReview).then(()=>{
-    alert("A unique 70-word review is copied automatically!\n\nYou are being redirected to Google Reviews.\nJust paste and submit.");
-    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review","_blank");
-});
-}
-</script>
-
-</body>
-</html>
+const starters = [
+"Excellent service","Outstanding experience","Highly satisfied","Very impressed",
+"Amazing support","
