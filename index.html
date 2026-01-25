@@ -1,78 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Right Click Computers | Premium Sales & Service</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #FFD700;
-            --secondary: #00f2ff;
-            --bg: #03050d;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right Click Computers | Premium Sales & Service</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+:root {
+  --primary:#FFD700; --secondary:#00f2ff; --bg:#03050d;
+  --glass:rgba(255,255,255,0.03); --border:rgba(255,255,255,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Outfit',sans-serif;}
+body{background:var(--bg);color:#fff;overflow-x:hidden;}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--bg); color: #fff; overflow-x: hidden; }
+/* Floating Buttons */
+.whatsapp-float{position:fixed;bottom:30px;right:100px;background:#25d366;color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;z-index:9999;text-decoration:none;box-shadow:0 10px 25px rgba(37,211,102,0.3);transition:0.3s;}
+.whatsapp-float:hover{transform:scale(1.1);}
+.review-float{position:fixed;bottom:30px;right:30px;background:linear-gradient(45deg,#FFD700,#00f2ff);color:#000;width:60px;height:60px;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:28px;font-weight:700;cursor:pointer;z-index:9999;box-shadow:0 0 20px #FFD700,0 0 40px #00f2ff;transition:0.3s;}
+.review-float:hover{transform:scale(1.1);}
 
-        /* Floating WhatsApp */
-        .whatsapp-float { position: fixed; bottom: 30px; right: 100px; background: #25d366; color: white; width: 60px; height: 60px; border-radius: 50%; text-align: center; font-size: 30px; box-shadow: 0 10px 25px rgba(37,211,102,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.3s; }
-        .whatsapp-float:hover { transform: scale(1.1); }
+/* Navigation */
+nav{position:fixed;width:100%;padding:20px 8%;display:flex;justify-content:space-between;align-items:center;z-index:1000;transition:0.5s;background:rgba(3,5,13,0.8);backdrop-filter:blur(15px);}
+.logo{font-size:1.8rem;font-weight:800;background:linear-gradient(90deg,#fff,var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
-        /* Floating Review Button */
-        .review-float { position: fixed; bottom: 30px; right: 30px; background: linear-gradient(45deg,#FFD700,#00f2ff); color: #000; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: 700; cursor: pointer; z-index: 9999; box-shadow: 0 0 20px #FFD700, 0 0 40px #00f2ff; transition: 0.3s; }
-        .review-float:hover { transform: scale(1.1); }
+/* Hero Section */
+.hero{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.hero-video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.3;z-index:-1;}
+.hero-content{text-align:center;max-width:900px;padding:0 20px;}
+.hero-content h1{font-size:clamp(3rem,10vw,6rem);font-weight:800;line-height:1;margin-bottom:20px;}
+.highlight{color:var(--primary);text-shadow:0 0 30px rgba(255,215,0,0.5);}
 
-        /* Navigation */
-        nav { position: fixed; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: 0.5s; background: rgba(3, 5, 13, 0.8); backdrop-filter: blur(15px); }
-        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+/* Grid */
+.container{padding:100px 8%;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:25px;}
+.glass-card{background:var(--glass);border:1px solid var(--border);padding:40px;border-radius:30px;backdrop-filter:blur(10px);transition:0.4s;position:relative;}
+.glass-card:hover{border-color:var(--primary);background:rgba(255,215,0,0.05);transform:translateY(-10px) rotate(1deg);}
+.icon-box{width:70px;height:70px;background:var(--primary);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:25px;color:#000;font-size:1.8rem;}
 
-        /* Hero Section */
-        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .hero-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: -1; }
-        .hero-content { text-align: center; max-width: 900px; padding: 0 20px; }
-        .hero-content h1 { font-size: clamp(3rem,10vw,6rem); font-weight: 800; line-height: 1; margin-bottom: 20px; }
-        .highlight { color: var(--primary); text-shadow: 0 0 30px rgba(255,215,0,0.5); }
+/* Review Strip */
+.review-strip{background:var(--primary);color:#000;padding:20px 0;overflow:hidden;white-space:nowrap;display:flex;}
+.scrolling-text{animation:scroll 30s linear infinite;font-weight:800;font-size:1.5rem;}
+@keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
 
-        /* Dynamic Grid */
-        .container { padding: 100px 8%; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-        .glass-card { background: var(--glass); border: 1px solid var(--border); padding: 40px; border-radius: 30px; backdrop-filter: blur(10px); transition: 0.4s; position: relative; }
-        .glass-card:hover { border-color: var(--primary); background: rgba(255,215,0,0.05); transform: translateY(-10px) rotate(1deg); }
-        .icon-box { width: 70px; height: 70px; background: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; color: #000; font-size: 1.8rem; }
+/* CTA Section */
+.cta-section{background:linear-gradient(45deg,#FFD700,#FFA500);padding:80px;border-radius:50px;text-align:center;color:#000;margin:50px 8%;}
+.btn-black{background:#000;color:#fff;padding:20px 40px;border-radius:50px;text-decoration:none;font-weight:700;display:inline-block;transition:0.3s;margin-top:30px;}
+.btn-black:hover{opacity:0.9;}
 
-        /* Review Strip */
-        .review-strip { background: var(--primary); color: #000; padding: 20px 0; overflow: hidden; white-space: nowrap; display: flex; }
-        .scrolling-text { animation: scroll 30s linear infinite; font-weight: 800; font-size: 1.5rem; }
-        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+/* Footer */
+footer{padding:50px 8%;border-top:1px solid var(--border);text-align:center;color:#666;}
 
-        /* CTA Section */
-        .cta-section { background: linear-gradient(45deg,#FFD700,#FFA500); padding: 80px; border-radius: 50px; text-align: center; color: #000; margin: 50px 8%; }
-        .btn-black { background: #000; color: #fff; padding: 20px 40px; border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-block; transition: 0.3s; margin-top: 30px; }
-        .btn-black:hover { opacity: 0.9; }
+/* Popup */
+.review-popup-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:99999;}
+.review-popup{background:rgba(255,255,255,0.05);border:2px solid var(--primary);padding:40px;border-radius:30px;backdrop-filter:blur(20px);width:90%;max-width:600px;text-align:center;box-shadow:0 0 20px #FFD700,0 0 40px #00f2ff;color:#fff;position:relative;}
+.review-popup textarea{width:100%;height:120px;border-radius:15px;border:1px solid var(--border);padding:15px;background:rgba(255,255,255,0.05);color:#fff;resize:none;margin-bottom:20px;font-size:1rem;}
+.close-btn{position:absolute;top:15px;right:20px;cursor:pointer;font-size:1.5rem;}
+.popup-btn{padding:15px 25px;border-radius:50px;border:none;font-weight:700;margin:5px;cursor:pointer;transition:0.3s;}
+.auto-btn{background:var(--primary);color:#000;}
+.user-btn{background:#00f2ff;color:#000;}
 
-        /* Footer */
-        footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: center; color: #666; }
-
-        /* Popup */
-        .review-popup-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:99999; }
-        .review-popup { background: rgba(255,255,255,0.05); border: 2px solid var(--primary); padding: 40px; border-radius: 30px; backdrop-filter: blur(20px); width: 90%; max-width: 600px; text-align:center; box-shadow: 0 0 20px #FFD700,0 0 40px #00f2ff; color:#fff; position: relative; }
-        .review-popup textarea { width:100%; height:120px; border-radius: 15px; border:1px solid var(--border); padding:15px; background: rgba(255,255,255,0.05); color:#fff; resize:none; margin-bottom:20px; font-size:1rem; }
-        .review-popup button { padding: 15px 25px; border-radius: 50px; border:none; cursor:pointer; font-weight:700; margin:5px; transition:0.3s; }
-        .generate-btn { background: var(--primary); color:#000; }
-        .copy-btn { background:#000; color:#fff; border:2px solid var(--primary); }
-        .google-btn { background: #00f2ff; color:#000; }
-        .close-btn { position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem; }
-
-        @media (max-width:768px){
-            .hero-content h1{font-size:3.5rem;}
-            .cta-section{padding:40px 20px;border-radius:20px;}
-        }
-    </style>
+@media(max-width:768px){.hero-content h1{font-size:3.5rem;}.cta-section{padding:40px 20px;border-radius:20px;}}
+</style>
 </head>
 <body>
 
@@ -82,130 +72,118 @@
 
 <!-- Navigation -->
 <nav>
-    <div class="logo">RIGHT CLICK</div>
-    <div style="display:flex;gap:20px;">
-        <a href="tel:+919059895427" style="color:var(--primary); text-decoration:none; font-weight:700;">CALL EXPERT</a>
-    </div>
+<div class="logo">RIGHT CLICK</div>
+<div style="display:flex;gap:20px;">
+<a href="tel:+919059895427" style="color:var(--primary); text-decoration:none; font-weight:700;">CALL EXPERT</a>
+</div>
 </nav>
 
 <!-- Hero -->
 <section class="hero">
-    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video" alt="Tech Background">
-    <div class="hero-content" data-aos="zoom-out">
-        <p style="text-transform:uppercase; letter-spacing:5px; color:var(--primary); font-weight:600;">Premier IT Hub Midhilapur</p>
-        <h1>Expertise You Can <span class="highlight">Trust.</span></h1>
-        <p style="color:#ccc; font-size:1.2rem; margin-bottom:40px;">Specializing in Chip-Level Repairs, MacBook Services, CCTV Installation, Data Recovery, and Custom Gaming Builds.</p>
-        <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black" style="background:var(--primary); color:#000;">VISIT OUR STORE</a>
-    </div>
+<img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video" alt="Tech Background">
+<div class="hero-content" data-aos="zoom-out">
+<p style="text-transform:uppercase; letter-spacing:5px; color:var(--primary); font-weight:600;">Premier IT Hub Midhilapur</p>
+<h1>Expertise You Can <span class="highlight">Trust.</span></h1>
+<p style="color:#ccc; font-size:1.2rem; margin-bottom:40px;">Specializing in Chip-Level Repairs, MacBook Services, CCTV Installation, Data Recovery, and Custom Gaming Builds.</p>
+<a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black" style="background:var(--primary); color:#000;">VISIT OUR STORE</a>
+</div>
 </section>
 
 <!-- Review Strip -->
 <div class="review-strip">
-    <div class="scrolling-text">
-        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
-    </div>
+<div class="scrolling-text">
+&nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
+</div>
 </div>
 
 <!-- Services -->
 <section class="container" id="services">
-    <h2 style="font-size:3rem;margin-bottom:50px;" data-aos="fade-right">Our Core <span class="highlight">Expertise</span></h2>
-    <div class="grid">
-        <div class="glass-card" data-aos="fade-up">
-            <div class="icon-box"><i class="fas fa-microchip"></i></div>
-            <h3>Motherboard Repair</h3>
-            <p style="color:#aaa;">IC replacement, short-circuit fixing, and precision micro-soldering for all laptop brands.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="100">
-            <div class="icon-box"><i class="fab fa-apple"></i></div>
-            <h3>MacBook Specialist</h3>
-            <p style="color:#aaa;">Display replacement, logic board repair, and battery upgrades for Air & Pro models.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="200">
-            <i class="fas fa-server" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
-            <h3>Sales & Custom Builds</h3>
-            <p style="color:#aaa;">New Laptops, Refurbished Business Series, and High-End Gaming PC Assemblies.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="300">
-            <i class="fas fa-video" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
-            <h3>CCTV Installation</h3>
-            <p style="color:#aaa;">Professional setup, DVR/NVR configuration, and remote monitoring solutions for homes and businesses.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="400">
-            <i class="fas fa-database" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
-            <h3>Data Recovery</h3>
-            <p style="color:#aaa;">Recover lost files, corrupted drives, and formatted storage devices with precision and security.</p>
-        </div>
-    </div>
+<h2 style="font-size:3rem;margin-bottom:50px;" data-aos="fade-right">Our Core <span class="highlight">Expertise</span></h2>
+<div class="grid">
+<div class="glass-card" data-aos="fade-up">
+<div class="icon-box"><i class="fas fa-microchip"></i></div>
+<h3>Motherboard Repair</h3>
+<p style="color:#aaa;">IC replacement, short-circuit fixing, and precision micro-soldering for all laptop brands.</p>
+</div>
+<div class="glass-card" data-aos="fade-up" data-aos-delay="100">
+<div class="icon-box"><i class="fab fa-apple"></i></div>
+<h3>MacBook Specialist</h3>
+<p style="color:#aaa;">Display replacement, logic board repair, and battery upgrades for Air & Pro models.</p>
+</div>
+<div class="glass-card" data-aos="fade-up" data-aos-delay="200">
+<i class="fas fa-server" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
+<h3>Sales & Custom Builds</h3>
+<p style="color:#aaa;">New Laptops, Refurbished Business Series, and High-End Gaming PC Assemblies.</p>
+</div>
+<div class="glass-card" data-aos="fade-up" data-aos-delay="300">
+<i class="fas fa-video" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
+<h3>CCTV Installation</h3>
+<p style="color:#aaa;">Professional setup, DVR/NVR configuration, and remote monitoring solutions for homes and businesses.</p>
+</div>
+<div class="glass-card" data-aos="fade-up" data-aos-delay="400">
+<i class="fas fa-database" style="font-size:2rem;color:var(--primary);margin-bottom:20px;"></i>
+<h3>Data Recovery</h3>
+<p style="color:#aaa;">Recover lost files, corrupted drives, and formatted storage devices with precision and security.</p>
+</div>
+</div>
 </section>
 
 <!-- CTA Section -->
 <section class="cta-section" data-aos="flip-up">
-    <h2>Ready to Fix Your Tech?</h2>
-    <p>Don't settle for local repairs. Get the professional "Right Click" experience today.</p>
-    <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black">GET DIRECTIONS TO STORE</a>
-    <a href="tel:+916300172690" class="btn-black" style="background:transparent; border:2px solid #000; color:#000; margin-left:10px;">CALL NOW</a>
-    <button id="ctaReviewBtn" class="btn-black" style="background: var(--primary); color: #000; margin-left:10px;">WRITE YOUR REVIEW</button>
+<h2>Ready to Fix Your Tech?</h2>
+<p>Don't settle for local repairs. Get the professional "Right Click" experience today.</p>
+<a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black">GET DIRECTIONS TO STORE</a>
+<a href="tel:+916300172690" class="btn-black" style="background:transparent; border:2px solid #000; color:#000; margin-left:10px;">CALL NOW</a>
+<button id="ctaReviewBtn" class="btn-black" style="background: var(--primary); color: #000; margin-left:10px;">WRITE YOUR REVIEW</button>
 </section>
 
 <!-- Footer -->
 <footer>
-    <div class="grid" style="text-align:left; margin-bottom:40px;">
-        <div>
-            <h3 class="highlight">Address</h3>
-            <p>1st Floor, Annapurna Arcade, 100ft Road,<br>Above SBI MIDHILAPURI Bank, Madhurwada, Visakhapatnam.</p>
-        </div>
-        <div>
-            <h3 class="highlight">Contact</h3>
-            <p>+91 90598 95427<br>+91 63001 72690</p>
-        </div>
-    </div>
-    <p>© 2026 Right Click Computers. Designed for Performance.</p>
+<div class="grid" style="text-align:left; margin-bottom:40px;">
+<div>
+<h3 class="highlight">Address</h3>
+<p>1st Floor, Annapurna Arcade, 100ft Road,<br>Above SBI MIDHILAPURI Bank, Madhurwada, Visakhapatnam.</p>
+</div>
+<div>
+<h3 class="highlight">Contact</h3>
+<p>+91 90598 95427<br>+91 63001 72690</p>
+</div>
+</div>
+<p>© 2026 Right Click Computers. Designed for Performance.</p>
 </footer>
 
 <!-- Review Popup -->
 <div class="review-popup-bg" id="reviewPopup">
-    <div class="review-popup">
-        <span class="close-btn" id="closePopup">&times;</span>
-        <h2>Share Your Experience</h2>
-        <textarea id="reviewText" readonly></textarea>
-        <div>
-            <button class="generate-btn" id="generateReview">Generate Review</button>
-            <button class="copy-btn" id="copyReview">Copy</button>
-            <button class="google-btn" id="openGoogle">Open Google Reviews</button>
-        </div>
-    </div>
+<div class="review-popup">
+<span class="close-btn" id="closePopup">&times;</span>
+<h2>Share Your Experience</h2>
+<textarea id="reviewText" placeholder="Write or generate a review..."></textarea>
+<div>
+<button class="popup-btn auto-btn" id="autoReview">Auto-Generate & Post</button>
+<button class="popup-btn user-btn" id="userReview">Post Your Text</button>
+</div>
+</div>
 </div>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-AOS.init({ duration:1000, once:true });
+AOS.init({duration:1000,once:true});
 
-window.onscroll = function(){
-    var nav=document.querySelector('nav');
-    if(window.pageYOffset>50){
-        nav.style.padding="10px 8%";
-        nav.style.background="rgba(3,5,13,0.95)";
-    }else{
-        nav.style.padding="20px 8%";
-        nav.style.background="rgba(3,5,13,0.8)";
-    }
+window.onscroll=function(){
+let nav=document.querySelector('nav');
+if(window.pageYOffset>50){nav.style.padding="10px 8%";nav.style.background="rgba(3,5,13,0.95)";}
+else{nav.style.padding="20px 8%";nav.style.background="rgba(3,5,13,0.8)";}
 };
 
-// Popup Logic
+// Review Popup
 const reviewFloat=document.getElementById('reviewFloat');
 const reviewPopup=document.getElementById('reviewPopup');
 const closePopup=document.getElementById('closePopup');
-const generateBtn=document.getElementById('generateReview');
-const copyBtn=document.getElementById('copyReview');
-const openGoogle=document.getElementById('openGoogle');
 const reviewText=document.getElementById('reviewText');
+const autoBtn=document.getElementById('autoReview');
+const userBtn=document.getElementById('userReview');
 const ctaBtn=document.getElementById('ctaReviewBtn');
 
-reviewFloat.addEventListener('click',()=>{reviewPopup.style.display='flex';});
-ctaBtn.addEventListener('click',()=>{reviewPopup.style.display='flex';});
-closePopup.addEventListener('click',()=>{reviewPopup.style.display='none';});
-
-// Review Phrase Libraries
 const reviews=[
 "Right Click Computers fixed my laptop motherboard perfectly, fast and professional service!",
 "MacBook battery replaced seamlessly. Highly recommend Right Click Computers!",
@@ -219,22 +197,24 @@ const reviews=[
 "Right Click Computers provides expert technical guidance and flawless execution."
 ];
 
-// Generate random review
-generateBtn.addEventListener('click',()=>{
-    const rand=Math.floor(Math.random()*reviews.length);
-    reviewText.value=reviews[rand];
+reviewFloat.addEventListener('click',()=>{reviewPopup.style.display='flex';});
+ctaBtn.addEventListener('click',()=>{reviewPopup.style.display='flex';});
+closePopup.addEventListener('click',()=>{reviewPopup.style.display='none';});
+
+// Auto-generate & post
+autoBtn.addEventListener('click',()=>{
+let rand=Math.floor(Math.random()*reviews.length);
+let review=reviews[rand];
+alert("Your review text will be pasted manually. Click OK to open Google Review page.");
+window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review','_blank');
+reviewText.value=review;
 });
 
-// Copy to clipboard
-copyBtn.addEventListener('click',()=>{
-    reviewText.select();
-    document.execCommand('copy');
-    alert('Review copied! You can now paste it on Google Reviews.');
-});
-
-// Open Google Reviews
-openGoogle.addEventListener('click',()=>{
-    window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review','_blank');
+// User-written post
+userBtn.addEventListener('click',()=>{
+if(reviewText.value.trim()===''){alert('Please write your review first!'); return;}
+alert("Click OK to open Google Review page. Paste your text there.");
+window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review','_blank');
 });
 </script>
 </body>
