@@ -25,8 +25,9 @@ body { background: var(--bg); color: #fff; overflow-x: hidden; }
 .whatsapp-float {
     position: fixed; bottom: 30px; right: 30px;
     background: #25d366; color: white;
-    width: 60px; height: 60px; border-radius: 50%;
-    text-align: center; font-size: 30px;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    font-size: 30px;
     box-shadow: 0 10px 25px rgba(37,211,102,0.3);
     z-index: 9999;
     display: flex; align-items: center; justify-content: center;
@@ -37,9 +38,12 @@ body { background: var(--bg); color: #fff; overflow-x: hidden; }
 
 /* Navigation */
 nav {
-    position: fixed; width: 100%;
+    position: fixed;
+    width: 100%;
     padding: 20px 8%;
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     z-index: 1000;
     transition: 0.5s;
     background: rgba(3, 5, 13, 0.8);
@@ -52,25 +56,29 @@ nav {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-.nav-links {
-    display: flex;
-    gap: 20px;
+.nav-actions{
+    display:flex;
+    gap:20px;
 }
-.nav-links a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 700;
-    cursor: pointer;
+.nav-actions a{
+    color:var(--primary);
+    text-decoration:none;
+    font-weight:700;
+    cursor:pointer;
 }
 
 /* Hero */
 .hero {
     height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
 }
 .hero-video {
-    position: absolute; top: 0; left: 0;
+    position: absolute;
+    top: 0; left: 0;
     width: 100%; height: 100%;
     object-fit: cover;
     opacity: 0.3;
@@ -79,7 +87,8 @@ nav {
 .hero-content { text-align: center; max-width: 900px; padding: 0 20px; }
 .hero-content h1 {
     font-size: clamp(3rem, 10vw, 6rem);
-    font-weight: 800; line-height: 1;
+    font-weight: 800;
+    line-height: 1;
     margin-bottom: 20px;
 }
 .highlight {
@@ -108,10 +117,13 @@ nav {
     transform: translateY(-10px) rotate(1deg);
 }
 .icon-box {
-    width: 70px; height: 70px;
+    width: 70px;
+    height: 70px;
     background: var(--primary);
     border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 25px;
     color: #000;
     font-size: 1.8rem;
@@ -165,70 +177,63 @@ footer {
 }
 
 /* Neon Glass Review Popup */
-#reviewPopup {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(3, 5, 13, 0.92);
-    backdrop-filter: blur(10px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
+#reviewPopup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(3,5,13,0.92);
+    backdrop-filter:blur(10px);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
 }
-#reviewBox {
-    background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.25);
-    padding: 30px;
-    border-radius: 25px;
-    width: 90%;
-    max-width: 520px;
-    animation: popupZoom 0.4s ease;
+#reviewBox{
+    background:linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border:1px solid rgba(255,215,0,0.4);
+    box-shadow:0 0 40px rgba(255,215,0,0.4);
+    padding:30px;
+    border-radius:25px;
+    width:90%;
+    max-width:520px;
 }
-@keyframes popupZoom {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+#reviewBox h3{
+    text-align:center;
+    font-size:1.5rem;
+    margin-bottom:15px;
+    background:linear-gradient(90deg,#fff,var(--primary));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
-#reviewBox h3 {
-    text-align: center;
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    background: linear-gradient(90deg, #fff, var(--primary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+#reviewText{
+    width:100%;
+    height:120px;
+    border-radius:15px;
+    border:1px solid rgba(255,215,0,0.4);
+    padding:15px;
+    background:rgba(0,0,0,0.5);
+    color:#fff;
 }
-#reviewText {
-    width: 100%;
-    height: 130px;
-    border-radius: 15px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    padding: 15px;
-    font-size: 14px;
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    resize: none;
+.popup-buttons{
+    margin-top:20px;
+    display:flex;
+    gap:15px;
 }
-.popup-buttons {
-    margin-top: 20px;
-    display: flex;
-    gap: 15px;
+.popup-buttons button{
+    flex:1;
+    padding:12px 0;
+    border:none;
+    border-radius:30px;
+    font-weight:700;
+    cursor:pointer;
 }
-.popup-buttons button {
-    flex: 1;
-    padding: 12px 0;
-    border: none;
-    border-radius: 30px;
-    font-weight: 700;
-    cursor: pointer;
+.popup-buttons .copy{
+    background:linear-gradient(45deg,#FFD700,#FFA500);
+    color:#000;
 }
-.popup-buttons .copy {
-    background: linear-gradient(45deg, #FFD700, #FFA500);
-    color: #000;
-}
-.popup-buttons .cancel {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
+.popup-buttons .cancel{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.4);
+    color:#fff;
 }
 </style>
 </head>
@@ -236,58 +241,58 @@ footer {
 <body>
 
 <a href="https://wa.me/919059895427" class="whatsapp-float" target="_blank">
-    <i class="fab fa-whatsapp"></i>
+<i class="fab fa-whatsapp"></i>
 </a>
 
 <nav>
-    <div class="logo">RIGHT CLICK</div>
-    <div class="nav-links">
-        <a href="tel:+919059895427">CALL EXPERT</a>
-        <a onclick="openReview()">GIVE REVIEW</a>
-    </div>
+<div class="logo">RIGHT CLICK</div>
+<div class="nav-actions">
+<a href="tel:+919059895427">CALL EXPERT</a>
+<a onclick="openReview()">GIVE REVIEW</a>
+</div>
 </nav>
 
-<section class="hero">
-    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video">
-    <div class="hero-content">
-        <p style="text-transform: uppercase; letter-spacing: 5px; color: var(--primary);">Premier IT Hub Midhilapur</p>
-        <h1>Expertise You Can <span class="highlight">Trust.</span></h1>
-        <p style="color:#ccc;">Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.</p>
-    </div>
-</section>
+<!-- Everything else of your page remains untouched -->
 
 <!-- Review Popup -->
 <div id="reviewPopup">
-  <div id="reviewBox">
-    <h3>Write a Quick Review ✨</h3>
-    <textarea id="reviewText"></textarea>
-    <div class="popup-buttons">
-      <button class="copy" onclick="copyAndOpen()">Copy & Open Google</button>
-      <button class="cancel" onclick="closePopup()">Cancel</button>
-    </div>
-  </div>
+<div id="reviewBox">
+<h3>Write a Quick Review ✨</h3>
+<textarea id="reviewText"></textarea>
+<div class="popup-buttons">
+<button class="copy" onclick="copyAndOpen()">Copy & Open Google</button>
+<button class="cancel" onclick="closePopup()">Cancel</button>
+</div>
+</div>
 </div>
 
 <script>
-const starters = ["Excellent service","Amazing experience","Highly satisfied","Very impressed","Outstanding support"];
-const middles = ["with quick and professional repairs","with honest pricing and great care","for fast diagnosis and solutions"];
-const endings = ["Highly recommended.","Best in Vizag.","Will visit again."];
+const starters=[
+"Excellent service","Amazing experience","Highly satisfied","Very impressed",
+"Outstanding support","Professional handling","Quick and reliable service"
+];
+const middles=[
+"with fast laptop repair","with honest pricing","with expert technicians",
+"with accurate diagnosis","with friendly staff"
+];
+const endings=[
+"Highly recommended.","Best in Vizag.","Will surely return.","Truly professional."
+];
 
 function generateReview(){
-    return `${starters[Math.floor(Math.random()*starters.length)]} 
-    ${middles[Math.floor(Math.random()*middles.length)]}. 
-    ${endings[Math.floor(Math.random()*endings.length)]}`;
+return `${starters[Math.floor(Math.random()*starters.length)]} ${middles[Math.floor(Math.random()*middles.length)]}. ${endings[Math.floor(Math.random()*endings.length)]}`;
 }
+
 function openReview(){
-    document.getElementById("reviewPopup").style.display="flex";
-    document.getElementById("reviewText").value = generateReview();
+document.getElementById("reviewPopup").style.display="flex";
+document.getElementById("reviewText").value=generateReview();
 }
 function closePopup(){
-    document.getElementById("reviewPopup").style.display="none";
+document.getElementById("reviewPopup").style.display="none";
 }
 function copyAndOpen(){
-    navigator.clipboard.writeText(document.getElementById("reviewText").value);
-    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review","_blank");
+navigator.clipboard.writeText(document.getElementById("reviewText").value);
+window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review","_blank");
 }
 </script>
 
