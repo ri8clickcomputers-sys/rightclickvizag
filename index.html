@@ -20,15 +20,34 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
 body { background: var(--bg); color: #fff; overflow-x: hidden; }
 
-/* Floating WhatsApp */
-.whatsapp-float { position: fixed; bottom: 30px; right: 30px; background: #25d366; color: white; width: 60px; height: 60px; border-radius: 50%; text-align: center; font-size: 30px; box-shadow: 0 10px 25px rgba(37,211,102,0.3); z-index: 9999; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.3s; }
-.whatsapp-float:hover { transform: scale(1.1); }
+/* Floating Buttons */
+.whatsapp-float, .review-float {
+    position: fixed;
+    bottom: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 0 10px 25px rgba(255,215,0,0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.whatsapp-float { right: 30px; background: #25d366; color: white; }
+.review-float { right: 100px; background: var(--primary); color: #000; }
+.whatsapp-float:hover, .review-float:hover { transform: scale(1.1); }
 
 /* Navigation */
 nav { position: fixed; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: 0.5s; background: rgba(3, 5, 13, 0.8); backdrop-filter: blur(15px); }
 .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+nav button { cursor: pointer; }
 
-/* Hero Section with Parallax */
+/* Hero Section */
 .hero { height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
 .hero-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: -1; }
 .hero-content { text-align: center; max-width: 900px; padding: 0 20px; }
@@ -63,9 +82,7 @@ nav { position: fixed; width: 100%; padding: 20px 8%; display: flex; justify-con
 /* CTA Section */
 .cta-section { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 80px; border-radius: 50px; text-align: center; color: #000; margin: 50px 8%; }
 .btn-black { background: #000; color: #fff; padding: 20px 40px; border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-block; transition: 0.3s; margin-top: 30px; }
-.btn-black:hover { transform: scale(1.05); }
 
-/* Footer */
 footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: center; color: #666; }
 
 @media (max-width: 768px) {
@@ -75,48 +92,75 @@ footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: cent
 
 /* Review Assist Popup */
 #reviewAssistPopup {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(255,255,255,0.05); border: 1px solid var(--primary); padding: 40px; border-radius: 30px;
-    backdrop-filter: blur(15px); color: #fff; z-index: 9999; display: none; max-width: 500px; width: 90%;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid var(--primary);
+    border-radius: 30px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 10000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    color: #fff;
+    text-align: center;
 }
-#reviewAssistPopup textarea { width: 100%; height: 100px; border-radius: 20px; padding: 15px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: #fff; resize: none; margin-bottom: 20px; }
-#reviewAssistPopup button { padding: 15px 25px; border-radius: 50px; border: none; cursor: pointer; font-weight: 700; margin-right: 10px; }
-#reviewAssistPopup .btn-generate { background: var(--primary); color: #000; }
-#reviewAssistPopup .btn-write { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-#reviewAssistPopup .close-popup { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.5rem; }
+#reviewAssistPopup textarea { width: 100%; height: 120px; border-radius: 15px; padding: 15px; border: 1px solid var(--primary); background: rgba(0,0,0,0.3); color: #fff; resize: none; }
+#reviewAssistPopup button { margin-top: 20px; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 700; cursor: pointer; }
+#closePopup { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; cursor: pointer; color: var(--primary); }
 </style>
 </head>
 <body>
 
-<!-- WhatsApp Floating Button -->
+<!-- Floating Buttons -->
 <a href="https://wa.me/919059895427" class="whatsapp-float" target="_blank">
     <i class="fab fa-whatsapp"></i>
 </a>
+<a href="#" id="floatingReview" class="review-float" title="Write a Review">⭐</a>
 
 <!-- Navigation -->
 <nav>
     <div class="logo">RIGHT CLICK</div>
-    <div style="display: flex; gap: 20px;">
+    <div style="display: flex; gap: 20px; align-items: center;">
         <a href="tel:+919059895427" style="color:var(--primary); text-decoration:none; font-weight:700;">CALL EXPERT</a>
-        <button id="openReviewAssist" style="background:var(--primary); border:none; padding:10px 20px; border-radius:50px; font-weight:700; cursor:pointer;">⭐ Review Us</button>
+        <button id="openReviewAssist" style="
+            background: var(--primary);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(255,215,0,0.3);
+            transition: 0.3s;
+        " title="Review Assist">
+            <i class="fas fa-pen"></i>
+        </button>
     </div>
 </nav>
 
-<!-- Hero -->
+<!-- Hero Section -->
 <section class="hero">
-    <img src="https://ri8clickcomputers-sys.github.io/rightclickvizag/logo.png" class="hero-video" alt="Tech Background">
+    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video" alt="Tech Background">
     <div class="hero-content" data-aos="zoom-out">
         <p style="text-transform: uppercase; letter-spacing: 5px; color: var(--primary); font-weight: 600;">Premier IT Hub Midhilapur</p>
         <h1>Expertise You Can <span class="highlight">Trust.</span></h1>
-        <p style="color: #ccc; font-size: 1.2rem; margin-bottom: 40px;">Specializing in Chip-Level Repairs, MacBook Services, CCTV Installation, Data Recovery, and Custom Gaming Builds.</p>
+        <p style="color: #ccc; font-size: 1.2rem; margin-bottom: 40px;">Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.</p>
         <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black" style="background:var(--primary); color:#000;">VISIT OUR STORE</a>
     </div>
 </section>
 
-<!-- Scrolling Review Strip -->
 <div class="review-strip">
     <div class="scrolling-text">
-        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
+        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
     </div>
 </div>
 
@@ -137,7 +181,7 @@ footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: cent
         <div class="glass-card" data-aos="fade-up" data-aos-delay="200">
             <i class="fas fa-server" style="font-size: 2rem; color: var(--primary); margin-bottom: 20px;"></i>
             <h3>Sales & Custom Builds</h3>
-            <p style="color:#aaa;">New Laptops, Refurbished Business Series, High-End Gaming PC Assemblies, CCTV Setup, and Data Recovery.</p>
+            <p style="color:#aaa;">New Laptops, Refurbished Business Series, and High-End Gaming PC Assemblies.</p>
         </div>
     </div>
 </section>
@@ -167,13 +211,11 @@ footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: cent
 
 <!-- Review Assist Popup -->
 <div id="reviewAssistPopup">
-    <span class="close-popup">&times;</span>
-    <h2>Write Your Review</h2>
-    <textarea id="reviewText" placeholder="Share your experience..."></textarea>
-    <div style="text-align:right;">
-        <button class="btn-generate" id="autoBtn">Auto-Generate Review</button>
-        <button class="btn-write" id="writeBtn">Write Review</button>
-    </div>
+    <span id="closePopup">&times;</span>
+    <h2>Review Assistant</h2>
+    <textarea id="generatedReview" readonly></textarea>
+    <button id="copyReview" style="background: var(--primary); color:#000;">Copy Review</button>
+    <button id="openGoogleReview" style="background:#000; color:#fff;">Write on Google</button>
 </div>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -191,48 +233,34 @@ window.onscroll = function() {
     }
 };
 
-// Review Assist Logic
-const popup = document.getElementById('reviewAssistPopup');
-const openBtn = document.getElementById('openReviewAssist');
-const closeBtn = document.querySelector('.close-popup');
-const reviewText = document.getElementById('reviewText');
-const autoBtn = document.getElementById('autoBtn');
-const writeBtn = document.getElementById('writeBtn');
-
-const reviews = [
-    "Right Click Computers delivered excellent service. Fast motherboard repair and great advice!",
-    "Professional and reliable. MacBook repair was flawless, highly recommended!",
-    "Custom gaming PC built exactly as requested. Very satisfied with Right Click Computers!",
-    "Excellent CCTV installation and data recovery. Expert staff and quick service!",
-    "Highly skilled technicians. My laptop was fixed quickly and efficiently."
-    // You can expand this array with hundreds of unique templates
-];
-
-// Open/Close popup
-openBtn.addEventListener('click', () => { popup.style.display = 'block'; });
-closeBtn.addEventListener('click', () => { popup.style.display = 'none'; });
-
-// Auto-generate review & copy
-autoBtn.addEventListener('click', () => {
-    let rand = Math.floor(Math.random() * reviews.length);
-    let review = reviews[rand];
-    reviewText.value = review;
-
-    // Copy to clipboard and open Google Review page
-    navigator.clipboard.writeText(review).then(() => {
-        alert("Auto-generated review copied to clipboard!\nClick OK to open Google Review page and paste it.");
-        window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review', '_blank');
-    }).catch(() => {
-        alert("Could not copy automatically. Please copy manually:\n" + review);
-        window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review', '_blank');
-    });
+// Floating Review button -> open Google directly
+document.getElementById('floatingReview').addEventListener('click', function(e){
+    e.preventDefault();
+    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review", "_blank");
 });
 
-// Write your own review button
-writeBtn.addEventListener('click', () => {
-    window.open('https://g.page/r/CZ6XNQ1f9WZNEBM/review', '_blank');
+// Review Assist popup
+const reviewPopup = document.getElementById('reviewAssistPopup');
+document.getElementById('openReviewAssist').addEventListener('click', function(){
+    const reviews = [
+        "Right Click Computers provided an amazing service! My laptop works like new.",
+        "Highly professional and fast repairs. Excellent experience with Right Click.",
+        "Custom gaming PC assembly was flawless. Very satisfied with the expertise.",
+        "MacBook screen replacement done quickly and efficiently. Great team!",
+        "Data recovery services recovered everything I needed. Very trustworthy."
+    ];
+    reviewPopup.style.display = "flex";
+    document.getElementById('generatedReview').value = reviews[Math.floor(Math.random()*reviews.length)];
+});
+document.getElementById('closePopup').addEventListener('click', function(){ reviewPopup.style.display='none'; });
+document.getElementById('copyReview').addEventListener('click', function(){
+    document.getElementById('generatedReview').select();
+    document.execCommand('copy');
+    alert("Review copied!");
+});
+document.getElementById('openGoogleReview').addEventListener('click', function(){
+    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review", "_blank");
 });
 </script>
-
 </body>
 </html>
