@@ -40,8 +40,14 @@ body { background: var(--bg); color: #fff; overflow-x: hidden; }
     transition: 0.3s;
 }
 .whatsapp-float { right: 30px; background: #25d366; color: white; }
-.review-float { right: 100px; background: var(--primary); color: #000; font-size:28px; }
+.review-float { right: 100px; background: var(--primary); color: #000; font-size:28px; animation: rotateButton 5s linear infinite; }
 .whatsapp-float:hover, .review-float:hover { transform: scale(1.1); }
+
+/* Button rotation animation */
+@keyframes rotateButton {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 /* Navigation */
 nav { position: fixed; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: 0.5s; background: rgba(3, 5, 13, 0.8); backdrop-filter: blur(15px); }
@@ -128,7 +134,7 @@ footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: cent
     <i class="fab fa-whatsapp"></i>
 </a>
 <a href="#" id="floatingReview" class="review-float" title="Write a Review">
-    <i class="fas fa-globe"></i>
+    <i class="fas fa-star"></i>
 </a>
 
 <!-- Navigation -->
