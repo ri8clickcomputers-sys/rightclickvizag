@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Right Click Computers | Premium Sales & Service</title>
     
-    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & Babel for in-browser compilation -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -42,18 +39,21 @@
         const { useState, useMemo, useEffect } = React;
 
         // ==========================================
-        // 🚀 STEP 4: PASTE YOUR GOOGLE SCRIPT URL HERE
+        // 🚀 LIVE GOOGLE SHEETS DATABASE URL
         // ==========================================
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxVemzlfo2MEBg45kAyWRIPxbHfor9MokQ7RZJAtf-GsCVbBNs6BIHZql-4QM_S8eeV/exec"; 
-        // Example: "https://script.google.com/macros/s/AKfycbw.../exec"
         // ==========================================
 
-        // --- MOCK DATA FOR STORE ---
+        // --- STORE DATA ---
         const PRODUCTS = [
             { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
             { id: 2, name: "Crucial P3 Plus 1TB NVMe SSD", category: "Components", price: 19000, image: "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 89 },
             { id: 3, name: "Logitech G502 Hero Gaming Mouse", category: "Accessories", price: 3390, image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=400&q=80", rating: 4.7, reviews: 312 },
-            { id: 4, name: "GIGABYTE 25-Inch IPS FHD 240Hz Monitor", category: "Displays", price: 11499, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80", rating: 4.5, reviews: 67 }
+            { id: 4, name: "GIGABYTE 25-Inch IPS FHD 240Hz Monitor", category: "Displays", price: 11499, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80", rating: 4.5, reviews: 67 },
+            { id: 5, name: "Ant Esports MK1300 V2 Mechanical Keyboard", category: "Accessories", price: 1550, image: "https://images.unsplash.com/photo-1595044426077-d36d9236d54a?auto=format&fit=crop&w=400&q=80", rating: 4.6, reviews: 145 },
+            { id: 6, name: "ASUS Dual RX 7600 EVO 8GB GPU", category: "Components", price: 26075, image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 42 },
+            { id: 7, name: "Apple iMac 24-inch (M3)", category: "Desktops", price: 134900, image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 28 },
+            { id: 8, name: "Portronics Toad 27 Wireless Mouse", category: "Accessories", price: 322, image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", rating: 4.2, reviews: 512 }
         ];
 
         const CATEGORIES = ["All", "Components", "Accessories", "Displays", "Desktops"];
@@ -66,11 +66,6 @@
             "Custom gaming PC assembly was flawless. Very satisfied with the expertise.",
             "MacBook screen replacement done quickly and efficiently. Great team!"
         ];
-
-        const DEMO_TICKETS = {
-            [`${PREFIX}-1001`]: { customer: "Rahul V.", mobile: "9876543210", device: "Dell XPS 15", issue: "Screen replacement", status: "Ready for Pickup", date: "Oct 24, 2026", cost: 8500 },
-            [`${PREFIX}-1002`]: { customer: "Priya S.", mobile: "8765432109", device: "MacBook Air M1", issue: "Battery dead", status: "Repairing", date: "Oct 26, 2026", cost: 6200 }
-        };
 
         const BrandLogo = () => (
             <div className="flex items-center gap-3 cursor-pointer">
@@ -97,6 +92,15 @@
             const [currentView, setCurrentView] = useState("store");
             const [toastMessage, setToastMessage] = useState("");
             
+            // Fixes Google Sheets raw ISO Dates to display beautifully
+            const formatDate = (dateStr) => {
+                if (!dateStr) return "";
+                if (typeof dateStr === 'string' && dateStr.includes("T") && dateStr.includes("Z")) {
+                    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+                return dateStr;
+            };
+
             const [cart, setCart] = useState([]);
             const [isCartOpen, setIsCartOpen] = useState(false);
             const [activeCategory, setActiveCategory] = useState("All");
@@ -104,6 +108,7 @@
             const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
             
             const [trackingSerial, setTrackingSerial] = useState("");
+            const [trackingMobile, setTrackingMobile] = useState(""); 
             const [searchedTicket, setSearchedTicket] = useState(null);
             const [trackingError, setTrackingError] = useState("");
             
@@ -121,11 +126,11 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // --- SMART DATABASE SYNC (Google Sheets OR LocalStorage) ---
+            // --- DATABASE SYNC ---
             const loadLocalData = () => {
                 const saved = localStorage.getItem('rightclick_tickets');
                 if (saved) setTicketsData(JSON.parse(saved));
-                else { setTicketsData(DEMO_TICKETS); saveDataToCloudOrLocal(DEMO_TICKETS); }
+                else setTicketsData({}); // Clean slate
             };
 
             useEffect(() => {
@@ -133,12 +138,7 @@
                     fetch(GOOGLE_SHEETS_API_URL)
                         .then(res => res.json())
                         .then(data => {
-                            if (Object.keys(data).length === 0) {
-                                setTicketsData(DEMO_TICKETS);
-                                saveDataToCloudOrLocal(DEMO_TICKETS);
-                            } else {
-                                setTicketsData(data);
-                            }
+                            setTicketsData(data || {}); // Loads empty object if sheet is empty
                         })
                         .catch(err => {
                             console.error("Failed to connect to Google Sheets, using Local Storage", err);
@@ -149,19 +149,16 @@
                 }
             }, []);
 
-            // Master Save Function
             const saveDataToCloudOrLocal = (data) => {
-                setTicketsData(data); // Update UI immediately
+                setTicketsData(data); 
                 
                 if (GOOGLE_SHEETS_API_URL) {
-                    // Save to Google Sheets
                     fetch(GOOGLE_SHEETS_API_URL, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify(data)
                     }).catch(err => console.error("Cloud Save Error:", err));
                 } else {
-                    // Save Locally
                     localStorage.setItem('rightclick_tickets', JSON.stringify(data));
                 }
             };
@@ -225,7 +222,6 @@
             const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
             const formatINR = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-            // --- ADMIN LOGIN LOGIC ---
             const handleAdminLogin = (e) => {
                 e.preventDefault();
                 if (loginUsername.toLowerCase() === 'rightclick' && loginPassword === '9059895427') {
@@ -244,7 +240,6 @@
                 showToast("Logged out successfully");
             };
 
-            // --- TICKET CREATION LOGIC ---
             const handleCreateTicket = (e) => {
                 e.preventDefault();
                 const customId = `${PREFIX}-${newTicketForm.serialNumber.trim()}`.toUpperCase();
@@ -266,7 +261,6 @@
                 showToast(`Created: ${customId}`);
             };
 
-            // --- TICKET UPDATING LOGIC ---
             const saveTicketEdit = (id) => {
                 const updatedTicket = { ...editFormData };
                 if (updatedTicket.status === 'Delivered' && ticketsData[id].status !== 'Delivered') {
@@ -278,7 +272,6 @@
                 showToast(`Updated ${id}`);
             };
 
-            // --- WHATSAPP CHECKOUT ---
             const processCheckout = () => {
                 let orderText = `Hello Right Click Computers! I would like to securely place an order:%0A%0A`;
                 cart.forEach(item => {
@@ -294,7 +287,6 @@
             return (
                 <div className="min-h-screen flex flex-col relative">
                     
-                    {/* TOAST */}
                     {toastMessage && (
                         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-zinc-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-bounce border border-yellow-500/50">
                             <i className="fas fa-check-circle text-yellow-400"></i>
@@ -302,7 +294,6 @@
                         </div>
                     )}
 
-                    {/* FLOATING BUTTONS */}
                     <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
                         <button onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} className="w-14 h-14 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform animate-pulse-slow">
                             <i className="fas fa-star text-2xl"></i>
@@ -312,7 +303,6 @@
                         </a>
                     </div>
 
-                    {/* REVIEW MODAL */}
                     {isReviewAssistOpen && (
                         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsReviewAssistOpen(false)}></div>
@@ -329,7 +319,6 @@
                         </div>
                     )}
 
-                    {/* SECURE CHECKOUT MODAL */}
                     {isCheckoutModalOpen && (
                         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCheckoutModalOpen(false)}></div>
@@ -351,7 +340,6 @@
                         </div>
                     )}
 
-                    {/* NAVIGATION BAR */}
                     <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
                             <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
@@ -370,7 +358,6 @@
                         </div>
                     </nav>
 
-                    {/* MOBILE MENU */}
                     {isMobileMenuOpen && (
                         <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
                             <div className="flex flex-col gap-4">
@@ -380,10 +367,8 @@
                         </div>
                     )}
 
-                    {/* MAIN CONTENT AREA */}
                     <div className="flex-grow pt-24">
                         
-                        {/* STORE VIEW */}
                         {currentView === "store" && (
                             <>
                                 <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
@@ -402,7 +387,7 @@
 
                                 <div className="bg-yellow-400 py-3 overflow-hidden border-y border-yellow-500">
                                     <div className="whitespace-nowrap inline-block animate-scroll-left text-black font-black tracking-widest text-lg">
-                                        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
+                                          • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
                                     </div>
                                 </div>
 
@@ -460,43 +445,53 @@
                             </>
                         )}
 
-                        {/* PUBLIC REPAIR TRACKING VIEW */}
+                        {/* PUBLIC REPAIR TRACKING VIEW (SECURE 2FA) */}
                         {currentView === "tracking" && (
                             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                                 <div className="text-center mb-16 animate-slide-in-right">
                                     <h2 className="text-5xl font-black text-white tracking-tight mb-4">Track Your Repair</h2>
-                                    <p className="text-lg text-zinc-400 max-w-xl mx-auto font-medium">Enter your Ticket ID below for real-time status updates.</p>
+                                    <p className="text-lg text-zinc-400 max-w-xl mx-auto font-medium">Verify your identity to get real-time status updates.</p>
                                 </div>
                                 <div className="bg-white/5 p-8 md:p-10 rounded-[40px] border border-white/10 mb-12 max-w-2xl mx-auto animate-slide-in-right backdrop-blur-xl">
                                     <form onSubmit={(e) => {
                                         e.preventDefault();
                                         const fullSearchId = `${PREFIX}-${trackingSerial.trim()}`.toUpperCase();
                                         const ticket = ticketsData[fullSearchId];
-                                        if (ticket) { setSearchedTicket({ ...ticket, fullId: fullSearchId }); setTrackingError(""); } 
-                                        else { setSearchedTicket(null); setTrackingError(`No active ticket found with ID: ${fullSearchId}.`); }
-                                    }} className="flex flex-col sm:flex-row gap-4">
-                                        <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
-                                            <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 flex items-center border-r border-zinc-200 select-none">{PREFIX}-</div>
-                                            <input type="text" placeholder="Enter Serial (e.g. 1001)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-5 bg-white focus:outline-none font-black text-zinc-900 uppercase text-xl" required />
+                                        
+                                        const inputMobileClean = trackingMobile.trim().replace(/\D/g, '');
+                                        const storedMobileClean = ticket ? String(ticket.mobile).trim().replace(/\D/g, '') : null;
+
+                                        if (ticket && inputMobileClean === storedMobileClean) { 
+                                            setSearchedTicket({ ...ticket, fullId: fullSearchId }); 
+                                            setTrackingError(""); 
+                                        } else { 
+                                            setSearchedTicket(null); 
+                                            setTrackingError(`No active ticket found with this ID and Mobile Number combination.`); 
+                                        }
+                                    }} className="flex flex-col gap-4">
+                                        
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
+                                                <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 flex items-center border-r border-zinc-200 select-none" title="Ticket Year">{PREFIX}-</div>
+                                                <input type="text" placeholder="Ticket Serial (e.g. 1001)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 uppercase text-lg" required />
+                                            </div>
+                                            <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
+                                                <div className="bg-zinc-100 text-zinc-500 px-6 flex items-center border-r border-zinc-200" title="Security Verification"><i className="fas fa-mobile-alt text-lg"></i></div>
+                                                <input type="text" placeholder="Mobile Number" value={trackingMobile} onChange={(e) => setTrackingMobile(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 text-lg" required />
+                                            </div>
                                         </div>
-                                        <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-black px-10 py-5 rounded-2xl font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.2)] text-lg"><i className="fas fa-search"></i> Track</button>
+
+                                        <button type="submit" className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.2)] text-lg mt-2"><i className="fas fa-shield-alt"></i> Secure Track</button>
                                     </form>
+                                    
                                     {trackingError && <div className="mt-6 text-red-400 bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-sm font-bold text-center"><i className="fas fa-exclamation-circle"></i> {trackingError}</div>}
-                                    {!searchedTicket && !trackingError && (
-                                        <div className="mt-6 pt-6 border-t border-zinc-800">
-                                            <p className="text-sm text-zinc-500 flex flex-wrap items-center gap-2 justify-center">
-                                                <span className="font-bold text-zinc-400">Try Demo IDs:</span> 
-                                                {Object.keys(ticketsData).slice(0, 2).map(id => <span key={id} onClick={() => setTrackingSerial(id.split('-')[1])} className="bg-white/10 px-2 py-1 rounded font-mono text-xs font-bold cursor-pointer hover:bg-yellow-400 hover:text-black transition-colors">{id}</span>)}
-                                            </p>
-                                        </div>
-                                    )}
                                 </div>
 
                                 {searchedTicket && (
                                     <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden animate-slide-in-right text-zinc-900">
                                         <div className="bg-zinc-950 text-white p-8 md:p-12 flex flex-wrap justify-between items-center gap-6">
                                             <div>
-                                                <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase mb-2">Ticket ID: {searchedTicket.fullId}</p>
+                                                <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase mb-2 flex items-center gap-2"><i className="fas fa-check-circle text-green-400"></i> Verified: {searchedTicket.fullId}</p>
                                                 <h3 className="text-4xl font-black mb-2">{searchedTicket.device}</h3>
                                                 <p className="text-zinc-400 font-medium text-lg">Customer: <span className="text-white">{searchedTicket.customer}</span></p>
                                             </div>
@@ -513,7 +508,7 @@
                                                 </div>
                                                 <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-8 flex items-start gap-5">
                                                     <div className="bg-zinc-200 p-4 rounded-2xl text-zinc-600"><i className="fas fa-calendar-alt text-2xl"></i></div>
-                                                    <div><p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Drop-off Date</p><p className="font-black text-zinc-900 text-xl">{searchedTicket.date}</p></div>
+                                                    <div><p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Drop-off Date</p><p className="font-black text-zinc-900 text-xl">{formatDate(searchedTicket.date)}</p></div>
                                                 </div>
                                             </div>
                                             <div className="relative pt-4 pb-8">
@@ -533,6 +528,7 @@
                                                                 <div className="text-left md:text-center mt-2">
                                                                     <p className={`font-black tracking-tight ${isCurrent ? 'text-zinc-950 text-xl' : isCompleted ? 'text-zinc-700' : 'text-zinc-400'}`}>{step}</p>
                                                                     {isCurrent && step !== 'Delivered' && <p className="text-xs font-black tracking-widest text-yellow-600 uppercase mt-1 animate-pulse">In Progress</p>}
+                                                                    {isCurrent && step === 'Delivered' && <p className="text-xs font-black tracking-widest text-zinc-500 uppercase mt-1">Completed</p>}
                                                                 </div>
                                                             </div>
                                                         );
@@ -572,8 +568,8 @@
                                         <h2 className="text-3xl font-black text-white flex items-center gap-3"><i className="fas fa-users-cog text-yellow-400"></i> Staff Dashboard</h2>
                                         <p className="text-zinc-400 font-medium mt-2">Manage repairs and update customer status. 
                                             {GOOGLE_SHEETS_API_URL ? 
-                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10">CLOUD DATABASE ACTIVE</span> : 
-                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10">LOCAL STORAGE MODE</span>
+                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10"><i className="fas fa-cloud"></i> CLOUD DB ACTIVE</span> : 
+                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10"><i className="fas fa-hdd"></i> LOCAL STORAGE MODE</span>
                                             }
                                         </p>
                                     </div>
@@ -601,7 +597,7 @@
                                                     const isEditing = editingTicketId === id;
                                                     return (
                                                         <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
-                                                            <td className="p-5 font-mono font-black text-zinc-900">{id}<div className="text-[10px] text-zinc-400 mt-1 uppercase">{ticket.date}</div></td>
+                                                            <td className="p-5 font-mono font-black text-zinc-900">{id}<div className="text-[10px] text-zinc-400 mt-1 uppercase">{formatDate(ticket.date)}</div></td>
                                                             <td className="p-5"><p className="font-black text-zinc-900">{ticket.customer}</p>{ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}</td>
                                                             <td className="p-5 font-bold">{ticket.device}</td>
                                                             <td className="p-5">
