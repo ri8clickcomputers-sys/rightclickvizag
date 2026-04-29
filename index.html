@@ -1,274 +1,731 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Right Click Computers | Premium Sales & Service</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Right Click Computers | Premium Sales & Service</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & Babel for in-browser compilation -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-<style>
-:root {
-    --primary: #FFD700;
-    --secondary: #00f2ff;
-    --bg: #03050d;
-    --glass: rgba(255, 255, 255, 0.03);
-    --border: rgba(255, 255, 255, 0.1);
-}
-
-/* Basic Reset */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-body { background: var(--bg); color: #fff; overflow-x: hidden; }
-
-/* Floating Buttons */
-.whatsapp-float, .review-float {
-    position: fixed;
-    bottom: 30px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    text-align: center;
-    font-size: 30px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: 0.3s;
-}
-.whatsapp-float { right: 30px; background: #25d366; color: white; }
-.review-float { right: 100px; background: var(--primary); color: #000; font-size:28px; animation: rotateButton 5s linear infinite; }
-.whatsapp-float:hover, .review-float:hover { transform: scale(1.1); }
-
-/* Button rotation animation */
-@keyframes rotateButton {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Navigation */
-nav { position: fixed; width: 100%; padding: 20px 8%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; transition: 0.5s; background: rgba(3, 5, 13, 0.8); backdrop-filter: blur(15px); }
-.logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display:flex; align-items:center; gap:10px; }
-/* Updated logo style for attention */
-.logo img {
-    width:60px;
-    height:auto;
-    filter: drop-shadow(0 0 15px #FFD700);
-    animation: logoGlowScale 2s infinite alternate;
-}
-@keyframes logoGlowScale {
-    0% { transform: scale(1); filter: drop-shadow(0 0 10px #FFD700); }
-    50% { transform: scale(1.08); filter: drop-shadow(0 0 25px #FFD700); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 15px #FFD700); }
-}
-
-.nav-right { display:flex; gap:15px; align-items:center; }
-
-/* Hero Section */
-.hero { height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-.hero-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; z-index: -1; }
-.hero-content { text-align: center; max-width: 900px; padding: 0 20px; }
-.hero-content h1 { font-size: clamp(3rem, 10vw, 6rem); font-weight: 800; line-height: 1; margin-bottom: 20px; }
-.highlight { color: var(--primary); text-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-
-/* Dynamic Grid */
-.container { padding: 100px 8%; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
-.glass-card { 
-    background: var(--glass); 
-    border: 1px solid var(--border); 
-    padding: 40px; 
-    border-radius: 30px; 
-    backdrop-filter: blur(10px);
-    transition: 0.4s;
-    position: relative;
-}
-.glass-card:hover { 
-    border-color: var(--primary);
-    background: rgba(255, 215, 0, 0.05);
-    transform: translateY(-10px) rotate(1deg);
-}
-.icon-box { width: 70px; height: 70px; background: var(--primary); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; color: #000; font-size: 1.8rem; }
-
-/* Review Section */
-.review-strip { background: var(--primary); color: #000; padding: 20px 0; overflow: hidden; white-space: nowrap; display: flex; }
-.scrolling-text { animation: scroll 30s linear infinite; font-weight: 800; font-size: 1.5rem; }
-@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
-/* CTA Section */
-.cta-section { background: linear-gradient(45deg, #FFD700, #FFA500); padding: 80px; border-radius: 50px; text-align: center; color: #000; margin: 50px 8%; }
-.btn-black { background: #000; color: #fff; padding: 20px 40px; border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-block; transition: 0.3s; margin-top: 30px; }
-
-footer { padding: 50px 8%; border-top: 1px solid var(--border); text-align: center; color: #666; }
-
-@media (max-width: 768px) {
-    .hero-content h1 { font-size: 3.5rem; }
-    .cta-section { padding: 40px 20px; border-radius: 20px; }
-}
-
-/* Review Assist Popup */
-#reviewAssistPopup {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(15px);
-    border: 1px solid var(--primary);
-    border-radius: 30px;
-    padding: 40px;
-    max-width: 500px;
-    width: 90%;
-    z-index: 10000;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    color: #fff;
-    text-align: center;
-}
-#reviewAssistPopup textarea { width: 100%; height: 120px; border-radius: 15px; padding: 15px; border: 1px solid var(--primary); background: rgba(0,0,0,0.3); color: #fff; resize: none; }
-#reviewAssistPopup button { margin-top: 20px; padding: 15px 30px; border-radius: 50px; border: none; font-weight: 700; cursor: pointer; }
-#closePopup { position: absolute; top: 15px; right: 20px; font-size: 1.2rem; cursor: pointer; color: var(--primary); }
-</style>
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #03050d; color: white; overflow-x: hidden; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .animate-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        
+        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .animate-scroll-left { animation: scrollLeft 20s linear infinite; }
+        
+        @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+    </style>
 </head>
 <body>
+    <div id="root"></div>
 
-<!-- Floating Buttons -->
-<a href="https://wa.me/919059895427" class="whatsapp-float" target="_blank">
-    <i class="fab fa-whatsapp"></i>
-</a>
-<a href="#" id="floatingReview" class="review-float" title="Write a Review">
-    <i class="fas fa-star"></i>
-</a>
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
 
-<!-- Navigation -->
-<nav>
-    <div class="logo">
-        <img src="https://raw.githubusercontent.com/ri8clickcomputers-sys/rightclickvizag/main/logo.png" alt="Brand Logo">
-        RIGHT CLICK
-    </div>
-    <div class="nav-right">
-        <a href="tel:+919059895427" style="color:var(--primary); text-decoration:none; font-weight:700;">CALL EXPERT</a>
-        <button id="openReviewAssist" style="background: var(--primary); color:#000; padding:10px 20px; border-radius:50px; border:none; font-weight:700; cursor:pointer;">Review Assist</button>
-    </div>
-</nav>
+        // ==========================================
+        // 🚀 STEP 4: PASTE YOUR GOOGLE SCRIPT URL HERE
+        // ==========================================
+        const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxVemzlfo2MEBg45kAyWRIPxbHfor9MokQ7RZJAtf-GsCVbBNs6BIHZql-4QM_S8eeV/exec"; 
+        // Example: "https://script.google.com/macros/s/AKfycbw.../exec"
+        // ==========================================
 
-<!-- Hero Section -->
-<section class="hero">
-    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" class="hero-video" alt="Tech Background">
-    <div class="hero-content" data-aos="zoom-out">
-        <p style="text-transform: uppercase; letter-spacing: 5px; color: var(--primary); font-weight: 600;">Premier IT Hub Midhilapur</p>
-        <h1>Expertise You Can <span class="highlight">Trust.</span></h1>
-        <p style="color: #ccc; font-size: 1.2rem; margin-bottom: 40px;">Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.</p>
-        <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black" style="background:var(--primary); color:#000;">VISIT OUR STORE</a>
-    </div>
-</section>
+        // --- MOCK DATA FOR STORE ---
+        const PRODUCTS = [
+            { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
+            { id: 2, name: "Crucial P3 Plus 1TB NVMe SSD", category: "Components", price: 19000, image: "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 89 },
+            { id: 3, name: "Logitech G502 Hero Gaming Mouse", category: "Accessories", price: 3390, image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=400&q=80", rating: 4.7, reviews: 312 },
+            { id: 4, name: "GIGABYTE 25-Inch IPS FHD 240Hz Monitor", category: "Displays", price: 11499, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80", rating: 4.5, reviews: 67 }
+        ];
 
-<div class="review-strip">
-    <div class="scrolling-text">
-        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
-    </div>
-</div>
+        const CATEGORIES = ["All", "Components", "Accessories", "Displays", "Desktops"];
+        const CURRENT_YEAR = new Date().getFullYear();
+        const PREFIX = `RC${CURRENT_YEAR}`;
 
-<!-- Services -->
-<section class="container" id="services">
-    <h2 style="font-size: 3rem; margin-bottom: 50px;" data-aos="fade-right">Our Core <span class="highlight">Expertise</span></h2>
-    <div class="grid">
-        <div class="glass-card" data-aos="fade-up">
-            <div class="icon-box"><i class="fas fa-microchip"></i></div>
-            <h3>Motherboard Repair</h3>
-            <p style="color:#aaa;">IC replacement, short-circuit fixing, and precision micro-soldering for all laptop brands.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="100">
-            <div class="icon-box"><i class="fab fa-apple"></i></div>
-            <h3>MacBook Specialist</h3>
-            <p style="color:#aaa;">Display replacement, logic board repair, and battery upgrades for Air & Pro models.</p>
-        </div>
-        <div class="glass-card" data-aos="fade-up" data-aos-delay="200">
-            <i class="fas fa-server" style="font-size: 2rem; color: var(--primary); margin-bottom: 20px;"></i>
-            <h3>Sales & Custom Builds</h3>
-            <p style="color:#aaa;">New Laptops, Refurbished Business Series, and High-End Gaming PC Assemblies.</p>
-        </div>
-    </div>
-</section>
+        const REVIEW_TEMPLATES = [
+            "Right Click Computers provided an amazing service! My laptop works like new.",
+            "Highly professional and fast repairs. Excellent experience with Right Click.",
+            "Custom gaming PC assembly was flawless. Very satisfied with the expertise.",
+            "MacBook screen replacement done quickly and efficiently. Great team!"
+        ];
 
-<!-- CTA -->
-<section class="cta-section" data-aos="flip-up">
-    <h2>Ready to Fix Your Tech?</h2>
-    <p>Don't settle for local repairs. Get the professional "Right Click" experience today.</p>
-    <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" class="btn-black">GET DIRECTIONS TO STORE</a>
-    <a href="tel:+916300172690" class="btn-black" style="background: transparent; border: 2px solid #000; color: #000; margin-left: 10px;">CALL NOW</a>
-</section>
+        const DEMO_TICKETS = {
+            [`${PREFIX}-1001`]: { customer: "Rahul V.", mobile: "9876543210", device: "Dell XPS 15", issue: "Screen replacement", status: "Ready for Pickup", date: "Oct 24, 2026", cost: 8500 },
+            [`${PREFIX}-1002`]: { customer: "Priya S.", mobile: "8765432109", device: "MacBook Air M1", issue: "Battery dead", status: "Repairing", date: "Oct 26, 2026", cost: 6200 }
+        };
 
-<!-- Footer -->
-<footer>
-    <div class="grid" style="text-align: left; margin-bottom: 40px;">
-        <div>
-            <h3 class="highlight">Address</h3>
-            <p>1st Floor, Annapurna Arcade, 100ft Road,<br>Above SBI MIDHILAPURI Bank, Madhurwada, Visakhapatnam.</p>
-        </div>
-        <div>
-            <h3 class="highlight">Contact</h3>
-            <p>+91 90598 95427<br>+91 63001 72690</p>
-        </div>
-    </div>
-    <p>© 2024 Right Click Computers. Delivering Professional IT Solutions Since 2024.</p>
-</footer>
+        const BrandLogo = () => (
+            <div className="flex items-center gap-3 cursor-pointer">
+                <div className="relative w-10 h-10 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                        <path d="M12 4L19 19L12 16L12 4Z" fill="#FACC15" />
+                        <path d="M12 4L5 19L12 16L12 4Z" fill="#FFFFFF" />
+                        <rect x="9.5" y="11" width="5" height="7" rx="2.5" stroke="#18181B" strokeWidth="0.75" fill="transparent"/>
+                        <line x1="9.5" y1="14" x2="14.5" y2="14" stroke="#18181B" strokeWidth="0.75"/>
+                        <line x1="12" y1="11" x2="12" y2="14" stroke="#18181B" strokeWidth="0.75"/>
+                    </svg>
+                </div>
+                <div className="flex flex-col -gap-1">
+                    <div className="flex items-baseline gap-1">
+                        <span className="font-black text-2xl tracking-wide text-white">RIGHT</span>
+                        <span className="font-bold text-xl text-zinc-300">Click</span>
+                    </div>
+                    <span className="text-[10px] font-bold tracking-[0.25em] text-yellow-500 uppercase leading-none">Computers</span>
+                </div>
+            </div>
+        );
 
-<!-- Review Assist Popup -->
-<div id="reviewAssistPopup">
-    <span id="closePopup">&times;</span>
-    <h2>Review Assistant</h2>
-    <textarea id="generatedReview" readonly></textarea>
-    <button id="copyReview" style="background: var(--primary); color:#000;">Copy Review</button>
-    <button id="openGoogleReview" style="background:#000; color:#fff;">Write on Google</button>
-</div>
+        function App() {
+            const [currentView, setCurrentView] = useState("store");
+            const [toastMessage, setToastMessage] = useState("");
+            
+            const [cart, setCart] = useState([]);
+            const [isCartOpen, setIsCartOpen] = useState(false);
+            const [activeCategory, setActiveCategory] = useState("All");
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+            
+            const [trackingSerial, setTrackingSerial] = useState("");
+            const [searchedTicket, setSearchedTicket] = useState(null);
+            const [trackingError, setTrackingError] = useState("");
+            
+            const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+            const [loginUsername, setLoginUsername] = useState("");
+            const [loginPassword, setLoginPassword] = useState("");
+            const [loginError, setLoginError] = useState("");
 
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script>
-AOS.init({ duration: 1000, once: true });
+            const [ticketsData, setTicketsData] = useState({});
+            const [editingTicketId, setEditingTicketId] = useState(null);
+            const [editFormData, setEditFormData] = useState({});
+            const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+            const [newTicketForm, setNewTicketForm] = useState({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", cost: "Pending" });
 
-window.onscroll = function() {
-    var nav = document.querySelector('nav');
-    if (window.pageYOffset > 50) {
-        nav.style.padding = "10px 8%";
-        nav.style.background = "rgba(3, 5, 13, 0.95)";
-    } else {
-        nav.style.padding = "20px 8%";
-        nav.style.background = "rgba(3, 5, 13, 0.8)";
-    }
-};
+            const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
+            const [generatedReview, setGeneratedReview] = useState("");
 
-// Floating Review button -> open Google directly
-document.getElementById('floatingReview').addEventListener('click', function(e){
-    e.preventDefault();
-    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review", "_blank");
-});
+            // --- SMART DATABASE SYNC (Google Sheets OR LocalStorage) ---
+            const loadLocalData = () => {
+                const saved = localStorage.getItem('rightclick_tickets');
+                if (saved) setTicketsData(JSON.parse(saved));
+                else { setTicketsData(DEMO_TICKETS); saveDataToCloudOrLocal(DEMO_TICKETS); }
+            };
 
-// Review Assist popup
-const reviewPopup = document.getElementById('reviewAssistPopup');
-document.getElementById('openReviewAssist').addEventListener('click', function(){
-    const reviews = [
-        "Right Click Computers provided an amazing service! My laptop works like new.",
-        "Highly professional and fast repairs. Excellent experience with Right Click.",
-        "Custom gaming PC assembly was flawless. Very satisfied with the expertise.",
-        "MacBook screen replacement done quickly and efficiently. Great team!",
-        "Data recovery services recovered everything I needed. Very trustworthy."
-    ];
-    reviewPopup.style.display = "flex";
-    document.getElementById('generatedReview').value = reviews[Math.floor(Math.random()*reviews.length)];
-});
-document.getElementById('closePopup').addEventListener('click', function(){ reviewPopup.style.display='none'; });
-document.getElementById('copyReview').addEventListener('click', function(){
-    document.getElementById('generatedReview').select();
-    document.execCommand('copy');
-    alert("Review copied!");
-});
-document.getElementById('openGoogleReview').addEventListener('click', function(){
-    window.open("https://g.page/r/CZ6XNQ1f9WZNEBM/review", "_blank");
-});
-</script>
+            useEffect(() => {
+                if (GOOGLE_SHEETS_API_URL) {
+                    fetch(GOOGLE_SHEETS_API_URL)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (Object.keys(data).length === 0) {
+                                setTicketsData(DEMO_TICKETS);
+                                saveDataToCloudOrLocal(DEMO_TICKETS);
+                            } else {
+                                setTicketsData(data);
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Failed to connect to Google Sheets, using Local Storage", err);
+                            loadLocalData();
+                        });
+                } else {
+                    loadLocalData();
+                }
+            }, []);
+
+            // Master Save Function
+            const saveDataToCloudOrLocal = (data) => {
+                setTicketsData(data); // Update UI immediately
+                
+                if (GOOGLE_SHEETS_API_URL) {
+                    // Save to Google Sheets
+                    fetch(GOOGLE_SHEETS_API_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(data)
+                    }).catch(err => console.error("Cloud Save Error:", err));
+                } else {
+                    // Save Locally
+                    localStorage.setItem('rightclick_tickets', JSON.stringify(data));
+                }
+            };
+
+            // --- AUTO DELETE SCRIPT ---
+            useEffect(() => {
+                const cleanupInterval = setInterval(() => {
+                    setTicketsData(prevData => {
+                        const now = Date.now();
+                        const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
+                        let hasDeletes = false;
+                        const cleanedData = { ...prevData };
+
+                        for (const ticketId in cleanedData) {
+                            const ticket = cleanedData[ticketId];
+                            if (ticket.status === 'Delivered' && ticket.deliveredAt) {
+                                if (now - ticket.deliveredAt > THREE_DAYS_IN_MS) {
+                                    delete cleanedData[ticketId];
+                                    hasDeletes = true;
+                                }
+                            }
+                        }
+                        
+                        if (hasDeletes) {
+                            saveDataToCloudOrLocal(cleanedData);
+                            return cleanedData;
+                        }
+                        return prevData;
+                    });
+                }, 60000); 
+                return () => clearInterval(cleanupInterval);
+            }, []);
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(""), 3000);
+            };
+
+            const filteredProducts = useMemo(() => {
+                if (activeCategory === "All") return PRODUCTS;
+                return PRODUCTS.filter(p => p.category === activeCategory);
+            }, [activeCategory]);
+
+            const addToCart = (product) => {
+                setCart(prev => {
+                    const existing = prev.find(item => item.id === product.id);
+                    if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+                    return [...prev, { ...product, quantity: 1 }];
+                });
+                showToast(`Added ${product.name} to cart`);
+            };
+
+            const updateQuantity = (id, delta) => {
+                setCart(prev => prev.map(item => {
+                    if (item.id === id) return { ...item, quantity: Math.max(0, item.quantity + delta) };
+                    return item;
+                }).filter(item => item.quantity > 0));
+            };
+
+            const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const formatINR = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+
+            // --- ADMIN LOGIN LOGIC ---
+            const handleAdminLogin = (e) => {
+                e.preventDefault();
+                if (loginUsername.toLowerCase() === 'rightclick' && loginPassword === '9059895427') {
+                    setIsAdminAuthenticated(true);
+                    setCurrentView('admin');
+                    setLoginError(''); setLoginUsername(''); setLoginPassword('');
+                    showToast("Secure Login Successful");
+                } else {
+                    setLoginError("Invalid username or password.");
+                }
+            };
+
+            const handleAdminLogout = () => {
+                setIsAdminAuthenticated(false);
+                setCurrentView('store');
+                showToast("Logged out successfully");
+            };
+
+            // --- TICKET CREATION LOGIC ---
+            const handleCreateTicket = (e) => {
+                e.preventDefault();
+                const customId = `${PREFIX}-${newTicketForm.serialNumber.trim()}`.toUpperCase();
+                
+                if (ticketsData[customId]) { showToast("Error: Ticket ID exists!"); return; }
+
+                const newTicket = {
+                    customer: newTicketForm.customer, mobile: newTicketForm.mobile,
+                    device: newTicketForm.device, issue: newTicketForm.issue,
+                    status: "Received", date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    cost: newTicketForm.cost || "Pending"
+                };
+
+                const updatedData = { ...ticketsData, [customId]: newTicket };
+                saveDataToCloudOrLocal(updatedData);
+                
+                setIsCreateModalOpen(false);
+                setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", cost: "Pending" });
+                showToast(`Created: ${customId}`);
+            };
+
+            // --- TICKET UPDATING LOGIC ---
+            const saveTicketEdit = (id) => {
+                const updatedTicket = { ...editFormData };
+                if (updatedTicket.status === 'Delivered' && ticketsData[id].status !== 'Delivered') {
+                    updatedTicket.deliveredAt = Date.now();
+                }
+                const updatedData = { ...ticketsData, [id]: updatedTicket };
+                saveDataToCloudOrLocal(updatedData);
+                setEditingTicketId(null);
+                showToast(`Updated ${id}`);
+            };
+
+            // --- WHATSAPP CHECKOUT ---
+            const processCheckout = () => {
+                let orderText = `Hello Right Click Computers! I would like to securely place an order:%0A%0A`;
+                cart.forEach(item => {
+                    orderText += `▪ ${item.quantity}x ${item.name} (${formatINR(item.price * item.quantity)})%0A`;
+                });
+                orderText += `%0A*Total Value: ${formatINR(cartTotal)}*%0A%0AHow should I proceed with the payment?`;
+                window.open(`https://wa.me/919059895427?text=${orderText}`, '_blank');
+                setIsCheckoutModalOpen(false);
+                setCart([]); 
+                showToast("Opening WhatsApp...");
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative">
+                    
+                    {/* TOAST */}
+                    {toastMessage && (
+                        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-zinc-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-bounce border border-yellow-500/50">
+                            <i className="fas fa-check-circle text-yellow-400"></i>
+                            <span className="font-bold text-sm">{toastMessage}</span>
+                        </div>
+                    )}
+
+                    {/* FLOATING BUTTONS */}
+                    <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+                        <button onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} className="w-14 h-14 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform animate-pulse-slow">
+                            <i className="fas fa-star text-2xl"></i>
+                        </button>
+                        <a href="https://wa.me/919059895427" target="_blank" className="w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform">
+                            <i className="fab fa-whatsapp text-3xl"></i>
+                        </a>
+                    </div>
+
+                    {/* REVIEW MODAL */}
+                    {isReviewAssistOpen && (
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsReviewAssistOpen(false)}></div>
+                            <div className="bg-zinc-900/90 border border-yellow-400/30 backdrop-blur-xl p-8 rounded-3xl w-full max-w-lg relative z-10 animate-slide-in-right">
+                                <button onClick={() => setIsReviewAssistOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white"><i className="fas fa-times"></i></button>
+                                <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2"><i className="fas fa-star text-yellow-400"></i> Review Assistant</h2>
+                                <p className="text-zinc-400 mb-6 text-sm">Help us grow by leaving a quick 5-star review!</p>
+                                <textarea readOnly value={generatedReview} className="w-full h-32 bg-black/50 border border-yellow-400/20 rounded-xl p-4 text-white font-medium resize-none focus:outline-none focus:border-yellow-400 transition-colors mb-4"/>
+                                <div className="flex gap-3">
+                                    <button onClick={() => { navigator.clipboard.writeText(generatedReview); showToast("Copied!"); }} className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2"><i className="fas fa-copy"></i> Copy Review</button>
+                                    <a href="https://g.page/r/CZ6XNQ1f9WZNEBM/review" target="_blank" className="flex-1 bg-white hover:bg-zinc-200 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-center">Write on Google</a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SECURE CHECKOUT MODAL */}
+                    {isCheckoutModalOpen && (
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCheckoutModalOpen(false)}></div>
+                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-[30px] w-full max-w-md relative z-10 animate-slide-in-right">
+                                <button onClick={() => setIsCheckoutModalOpen(false)} className="absolute top-5 right-5 text-zinc-400 hover:text-white bg-white/5 p-2 rounded-full"><i className="fas fa-times"></i></button>
+                                <div className="text-center mb-6 mt-2">
+                                    <div className="w-20 h-20 bg-yellow-400/10 text-yellow-400 rounded-full flex items-center justify-center mx-auto mb-5 border border-yellow-400/20"><i className="fas fa-shield-alt text-4xl"></i></div>
+                                    <h2 className="text-3xl font-black text-white mb-3">Secure Checkout</h2>
+                                    <p className="text-zinc-400 text-sm leading-relaxed">To guarantee your financial security, <strong className="text-white">we never ask for card details on our website.</strong> Please confirm your order directly with our team via WhatsApp to proceed with payment safely.</p>
+                                </div>
+                                <div className="bg-black/50 rounded-2xl p-5 mb-6 border border-white/5 shadow-inner">
+                                    <div className="flex justify-between text-sm mb-2 text-zinc-400 font-bold"><span>Total Items:</span> <span className="text-white">{cartCount}</span></div>
+                                    <div className="flex justify-between text-xl font-black text-white pt-2 border-t border-white/10 mt-2"><span>Total Cost:</span> <span className="text-yellow-400">{formatINR(cartTotal)}</span></div>
+                                </div>
+                                <button onClick={processCheckout} className="w-full bg-[#25d366] hover:bg-[#20bd5a] text-white py-4 rounded-xl font-black text-lg shadow-[0_0_25px_rgba(37,211,102,0.25)] transition-all flex justify-center items-center gap-3">
+                                    <i className="fab fa-whatsapp text-2xl"></i> Confirm on WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* NAVIGATION BAR */}
+                    <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
+                            <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
+                            <div className="hidden md:flex items-center space-x-8">
+                                <button onClick={() => setCurrentView("store")} className={`font-bold transition-colors ${currentView === 'store' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Store</button>
+                                <button onClick={() => setCurrentView("tracking")} className={`font-bold transition-colors ${currentView === 'tracking' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Repair Tracking</button>
+                                <a href="tel:+919059895427" className="text-yellow-400 font-bold tracking-wider hover:text-yellow-300">CALL EXPERT</a>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setIsCartOpen(true)} className="relative p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                    <i className="fas fa-shopping-cart text-2xl"></i>
+                                    {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[11px] font-black h-5 w-5 rounded-full flex items-center justify-center border-2 border-[#03050d]">{cartCount}</span>}
+                                </button>
+                                <button className="md:hidden p-2 text-zinc-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}><i className="fas fa-bars text-2xl"></i></button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* MOBILE MENU */}
+                    {isMobileMenuOpen && (
+                        <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
+                            <div className="flex flex-col gap-4">
+                                <button onClick={() => { setCurrentView("store"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Store</button>
+                                <button onClick={() => { setCurrentView("tracking"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Repair Tracking</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MAIN CONTENT AREA */}
+                    <div className="flex-grow pt-24">
+                        
+                        {/* STORE VIEW */}
+                        {currentView === "store" && (
+                            <>
+                                <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+                                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#03050d] via-transparent to-[#03050d]"></div>
+                                    <div className="relative z-10 text-center max-w-4xl px-4 animate-fade-in-up">
+                                        <p className="text-yellow-400 font-bold tracking-[5px] uppercase mb-4 text-sm">Premier IT Hub Midhilapur</p>
+                                        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">Expertise You Can <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 drop-shadow-[0_0_20px_rgba(255,215,0,0.3)]">Trust.</span></h1>
+                                        <p className="text-zinc-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium">Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.</p>
+                                        <div className="flex flex-wrap justify-center gap-4">
+                                            <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" target="_blank" className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-4 rounded-full font-bold shadow-[0_0_20px_rgba(255,215,0,0.2)]">VISIT STORE</a>
+                                            <button onClick={() => setCurrentView("tracking")} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-8 py-4 rounded-full font-bold backdrop-blur-md">TRACK REPAIR</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-yellow-400 py-3 overflow-hidden border-y border-yellow-500">
+                                    <div className="whitespace-nowrap inline-block animate-scroll-left text-black font-black tracking-widest text-lg">
+                                        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
+                                    </div>
+                                </div>
+
+                                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                                    <h2 className="text-4xl md:text-5xl font-black text-white mb-16 text-center">Our Core <span className="text-yellow-400">Expertise</span></h2>
+                                    <div className="grid md:grid-cols-3 gap-8">
+                                        <div className="bg-white/5 border border-white/10 backdrop-blur-lg p-10 rounded-[30px] hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all group hover:-translate-y-2">
+                                            <div className="w-20 h-20 bg-yellow-400 text-black rounded-2xl flex items-center justify-center mb-8"><i className="fas fa-microchip text-3xl"></i></div>
+                                            <h3 className="text-2xl font-bold text-white mb-4">Motherboard Repair</h3>
+                                            <p className="text-zinc-400 font-medium leading-relaxed">IC replacement, short-circuit fixing, and precision micro-soldering for all laptop brands.</p>
+                                        </div>
+                                        <div className="bg-white/5 border border-white/10 backdrop-blur-lg p-10 rounded-[30px] hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all group hover:-translate-y-2">
+                                            <div className="w-20 h-20 bg-yellow-400 text-black rounded-2xl flex items-center justify-center mb-8"><i className="fas fa-laptop text-3xl"></i></div>
+                                            <h3 className="text-2xl font-bold text-white mb-4">MacBook Specialist</h3>
+                                            <p className="text-zinc-400 font-medium leading-relaxed">Display replacement, logic board repair, and battery upgrades for Air & Pro models.</p>
+                                        </div>
+                                        <div className="bg-white/5 border border-white/10 backdrop-blur-lg p-10 rounded-[30px] hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all group hover:-translate-y-2">
+                                            <div className="w-20 h-20 bg-yellow-400 text-black rounded-2xl flex items-center justify-center mb-8"><i className="fas fa-server text-3xl"></i></div>
+                                            <h3 className="text-2xl font-bold text-white mb-4">Sales & Custom Builds</h3>
+                                            <p className="text-zinc-400 font-medium leading-relaxed">New Laptops, Refurbished Business Series, and High-End Gaming PC Assemblies.</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="bg-zinc-950 py-24 border-t border-white/5">
+                                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                                            <div><h2 className="text-3xl font-black text-white tracking-tight">Featured Gear</h2><p className="text-zinc-500 mt-2 font-medium">Upgrade your rig directly from our store.</p></div>
+                                            <div className="flex overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:pb-0 hide-scrollbar gap-2">
+                                                {CATEGORIES.map(cat => (
+                                                    <button key={cat} onClick={() => setActiveCategory(cat)} className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all ${activeCategory === cat ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(255,215,0,0.3)]' : 'bg-white/5 text-zinc-300 border border-white/10 hover:bg-white/10'}`}>{cat}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            {filteredProducts.map(product => (
+                                                <div key={product.id} className="bg-white/5 rounded-3xl border border-white/10 overflow-hidden hover:border-yellow-400/50 transition-all flex flex-col">
+                                                    <div className="aspect-[4/3] overflow-hidden bg-black relative">
+                                                        <img src={product.image} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+                                                        <div className="absolute top-4 left-4 bg-yellow-400 text-black px-3 py-1 rounded-md text-xs font-black uppercase">{product.category}</div>
+                                                    </div>
+                                                    <div className="p-6 flex flex-col flex-grow">
+                                                        <div className="flex items-center gap-1 mb-3"><i className="fas fa-star text-yellow-400 text-xs"></i><span className="text-xs font-bold text-zinc-300">{product.rating}</span></div>
+                                                        <h3 className="font-bold text-white mb-4 line-clamp-2">{product.name}</h3>
+                                                        <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/10">
+                                                            <span className="text-xl font-black text-yellow-400">{formatINR(product.price)}</span>
+                                                            <button onClick={() => addToCart(product)} className="h-12 w-12 bg-white/10 text-white rounded-full flex items-center justify-center hover:bg-yellow-400 hover:text-black transition-colors"><i className="fas fa-plus"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+                            </>
+                        )}
+
+                        {/* PUBLIC REPAIR TRACKING VIEW */}
+                        {currentView === "tracking" && (
+                            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                                <div className="text-center mb-16 animate-slide-in-right">
+                                    <h2 className="text-5xl font-black text-white tracking-tight mb-4">Track Your Repair</h2>
+                                    <p className="text-lg text-zinc-400 max-w-xl mx-auto font-medium">Enter your Ticket ID below for real-time status updates.</p>
+                                </div>
+                                <div className="bg-white/5 p-8 md:p-10 rounded-[40px] border border-white/10 mb-12 max-w-2xl mx-auto animate-slide-in-right backdrop-blur-xl">
+                                    <form onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const fullSearchId = `${PREFIX}-${trackingSerial.trim()}`.toUpperCase();
+                                        const ticket = ticketsData[fullSearchId];
+                                        if (ticket) { setSearchedTicket({ ...ticket, fullId: fullSearchId }); setTrackingError(""); } 
+                                        else { setSearchedTicket(null); setTrackingError(`No active ticket found with ID: ${fullSearchId}.`); }
+                                    }} className="flex flex-col sm:flex-row gap-4">
+                                        <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
+                                            <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 flex items-center border-r border-zinc-200 select-none">{PREFIX}-</div>
+                                            <input type="text" placeholder="Enter Serial (e.g. 1001)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-5 bg-white focus:outline-none font-black text-zinc-900 uppercase text-xl" required />
+                                        </div>
+                                        <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-black px-10 py-5 rounded-2xl font-black transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.2)] text-lg"><i className="fas fa-search"></i> Track</button>
+                                    </form>
+                                    {trackingError && <div className="mt-6 text-red-400 bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-sm font-bold text-center"><i className="fas fa-exclamation-circle"></i> {trackingError}</div>}
+                                    {!searchedTicket && !trackingError && (
+                                        <div className="mt-6 pt-6 border-t border-zinc-800">
+                                            <p className="text-sm text-zinc-500 flex flex-wrap items-center gap-2 justify-center">
+                                                <span className="font-bold text-zinc-400">Try Demo IDs:</span> 
+                                                {Object.keys(ticketsData).slice(0, 2).map(id => <span key={id} onClick={() => setTrackingSerial(id.split('-')[1])} className="bg-white/10 px-2 py-1 rounded font-mono text-xs font-bold cursor-pointer hover:bg-yellow-400 hover:text-black transition-colors">{id}</span>)}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {searchedTicket && (
+                                    <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden animate-slide-in-right text-zinc-900">
+                                        <div className="bg-zinc-950 text-white p-8 md:p-12 flex flex-wrap justify-between items-center gap-6">
+                                            <div>
+                                                <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase mb-2">Ticket ID: {searchedTicket.fullId}</p>
+                                                <h3 className="text-4xl font-black mb-2">{searchedTicket.device}</h3>
+                                                <p className="text-zinc-400 font-medium text-lg">Customer: <span className="text-white">{searchedTicket.customer}</span></p>
+                                            </div>
+                                            <div className="bg-white/10 border border-white/20 px-8 py-5 rounded-3xl text-right backdrop-blur-md">
+                                                <p className="text-zinc-400 text-xs font-bold tracking-wider uppercase mb-1">Estimated Cost</p>
+                                                <p className="text-3xl font-black text-yellow-400">{searchedTicket.cost === 'Pending' ? 'Pending' : formatINR(searchedTicket.cost)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="p-8 md:p-12">
+                                            <div className="grid md:grid-cols-2 gap-6 mb-16">
+                                                <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-8 flex items-start gap-5">
+                                                    <div className="bg-yellow-400/20 p-4 rounded-2xl text-yellow-600"><i className="fas fa-exclamation-circle text-2xl"></i></div>
+                                                    <div><p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Reported Issue</p><p className="font-black text-zinc-900 text-xl">{searchedTicket.issue}</p></div>
+                                                </div>
+                                                <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-8 flex items-start gap-5">
+                                                    <div className="bg-zinc-200 p-4 rounded-2xl text-zinc-600"><i className="fas fa-calendar-alt text-2xl"></i></div>
+                                                    <div><p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Drop-off Date</p><p className="font-black text-zinc-900 text-xl">{searchedTicket.date}</p></div>
+                                                </div>
+                                            </div>
+                                            <div className="relative pt-4 pb-8">
+                                                <h4 className="text-2xl font-black text-zinc-950 mb-12 flex items-center gap-3"><i className="fas fa-tasks text-yellow-500"></i> Current Status</h4>
+                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10 gap-8 md:gap-0 px-2">
+                                                    <div className="hidden md:block absolute top-8 left-[5%] right-[5%] h-2 bg-zinc-100 rounded-full -z-10"></div>
+                                                    {['Received', 'Diagnosing', 'Repairing', 'Ready for Pickup', 'Delivered'].map((step, index) => {
+                                                        const states = ['Received', 'Diagnosing', 'Repairing', 'Ready for Pickup', 'Delivered'];
+                                                        const currentIndex = states.indexOf(searchedTicket.status);
+                                                        const isCompleted = index < currentIndex;
+                                                        const isCurrent = index === currentIndex;
+                                                        return (
+                                                            <div key={step} className="flex md:flex-col items-center gap-5 md:gap-4 w-full md:w-1/5 relative group">
+                                                                <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold border-[6px] transition-all duration-500 ${isCompleted ? 'bg-yellow-400 border-white text-zinc-950 shadow-lg' : isCurrent && step === 'Delivered' ? 'bg-zinc-950 border-white text-white shadow-xl scale-110' : isCurrent ? 'bg-zinc-950 border-white text-yellow-400 shadow-2xl ring-4 ring-yellow-400/30 scale-110' : 'bg-white border-zinc-200 text-zinc-300'}`}>
+                                                                    {isCompleted ? <i className="fas fa-check text-xl"></i> : isCurrent && step === 'Repairing' ? <i className="fas fa-wrench text-xl"></i> : isCurrent && step === 'Diagnosing' ? <i className="fas fa-search text-xl"></i> : isCurrent && step === 'Ready for Pickup' ? <i className="fas fa-thumbs-up text-xl"></i> : isCurrent && step === 'Delivered' ? <i className="fas fa-box text-xl"></i> : <span className="text-xl">{index + 1}</span>}
+                                                                </div>
+                                                                <div className="text-left md:text-center mt-2">
+                                                                    <p className={`font-black tracking-tight ${isCurrent ? 'text-zinc-950 text-xl' : isCompleted ? 'text-zinc-700' : 'text-zinc-400'}`}>{step}</p>
+                                                                    {isCurrent && step !== 'Delivered' && <p className="text-xs font-black tracking-widest text-yellow-600 uppercase mt-1 animate-pulse">In Progress</p>}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </main>
+                        )}
+
+                        {/* ADMIN LOGIN VIEW */}
+                        {currentView === "admin-login" && (
+                            <main className="flex items-center justify-center py-20 px-4 min-h-[70vh]">
+                                <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md animate-slide-in-right text-zinc-900">
+                                    <div className="text-center mb-10">
+                                        <div className="bg-zinc-100 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"><i className="fas fa-lock text-4xl text-zinc-900"></i></div>
+                                        <h2 className="text-3xl font-black text-zinc-950">Staff Portal</h2>
+                                        <p className="text-zinc-500 font-medium mt-2">Authorized personnel only</p>
+                                    </div>
+                                    <form onSubmit={handleAdminLogin} className="space-y-6">
+                                        <div><label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Username</label><input type="text" value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} className="w-full px-4 py-4 bg-zinc-50 border-2 border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" required/></div>
+                                        <div><label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Password</label><input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full px-4 py-4 bg-zinc-50 border-2 border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" required/></div>
+                                        {loginError && <div className="text-red-500 text-sm font-bold bg-red-50 p-4 rounded-xl border border-red-100">{loginError}</div>}
+                                        <button type="submit" className="w-full bg-zinc-950 text-white py-4 rounded-2xl font-black shadow-lg">Secure Login</button>
+                                    </form>
+                                </div>
+                            </main>
+                        )}
+
+                        {/* ADMIN DASHBOARD VIEW */}
+                        {currentView === "admin" && isAdminAuthenticated && (
+                            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
+                                    <div>
+                                        <h2 className="text-3xl font-black text-white flex items-center gap-3"><i className="fas fa-users-cog text-yellow-400"></i> Staff Dashboard</h2>
+                                        <p className="text-zinc-400 font-medium mt-2">Manage repairs and update customer status. 
+                                            {GOOGLE_SHEETS_API_URL ? 
+                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10">CLOUD DATABASE ACTIVE</span> : 
+                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10">LOCAL STORAGE MODE</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-4">
+                                        <button onClick={() => setIsCreateModalOpen(true)} className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-xl shadow-[0_0_15px_rgba(255,215,0,0.3)] flex items-center gap-2"><i className="fas fa-plus"></i> New Ticket</button>
+                                        <button onClick={handleAdminLogout} className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center gap-2"><i className="fas fa-sign-out-alt"></i> Logout</button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-[30px] shadow-2xl overflow-hidden text-zinc-900">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-zinc-100 text-zinc-500 border-b border-zinc-200">
+                                                    <th className="p-5 font-black text-xs uppercase">Ticket ID</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Customer Info</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Device</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Status</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Cost (₹)</th>
+                                                    <th className="p-5 font-black text-xs uppercase text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-zinc-100">
+                                                {Object.entries(ticketsData).sort((a, b) => b[0].localeCompare(a[0])).map(([id, ticket]) => {
+                                                    const isEditing = editingTicketId === id;
+                                                    return (
+                                                        <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
+                                                            <td className="p-5 font-mono font-black text-zinc-900">{id}<div className="text-[10px] text-zinc-400 mt-1 uppercase">{ticket.date}</div></td>
+                                                            <td className="p-5"><p className="font-black text-zinc-900">{ticket.customer}</p>{ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}</td>
+                                                            <td className="p-5 font-bold">{ticket.device}</td>
+                                                            <td className="p-5">
+                                                                {isEditing ? (
+                                                                    <select className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}>
+                                                                        <option value="Received">Received</option><option value="Diagnosing">Diagnosing</option><option value="Repairing">Repairing</option><option value="Ready for Pickup">Ready for Pickup</option><option value="Delivered">Delivered</option>
+                                                                    </select>
+                                                                ) : (
+                                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-black ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-700' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="p-5">
+                                                                {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
+                                                            </td>
+                                                            <td className="p-5 text-right">
+                                                                {isEditing ? <button onClick={() => saveTicketEdit(id)} className="bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm"><i className="fas fa-save"></i> Save</button> : <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="bg-zinc-100 text-zinc-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-200"><i className="fas fa-edit"></i> Edit</button>}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* CREATE MODAL */}
+                                {isCreateModalOpen && (
+                                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)}></div>
+                                        <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-xl relative z-10 text-zinc-900 overflow-hidden">
+                                            <div className="flex justify-between items-center p-8 bg-zinc-50 border-b border-zinc-200">
+                                                <h3 className="text-2xl font-black text-zinc-950"><i className="fas fa-ticket-alt text-yellow-500"></i> New Ticket</h3>
+                                                <button onClick={() => setIsCreateModalOpen(false)} className="text-zinc-400 hover:text-zinc-900 bg-zinc-200/50 p-2 rounded-full"><i className="fas fa-times"></i></button>
+                                            </div>
+                                            <form onSubmit={handleCreateTicket} className="p-8 space-y-5">
+                                                <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20">
+                                                    <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 py-4 flex items-center border-r border-zinc-200">{PREFIX}-</div>
+                                                    <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-4 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="001"/>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-5">
+                                                    <input type="text" required value={newTicketForm.customer} onChange={e => setNewTicketForm({...newTicketForm, customer: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Customer Name"/>
+                                                    <input type="text" required value={newTicketForm.mobile} onChange={e => setNewTicketForm({...newTicketForm, mobile: e.target.value})} className="w-full p-4 bg-blue-50/50 border border-blue-100 rounded-2xl focus:border-blue-400 font-bold" placeholder="Mobile Number"/>
+                                                </div>
+                                                <input type="text" required value={newTicketForm.device} onChange={e => setNewTicketForm({...newTicketForm, device: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Device Model"/>
+                                                <textarea required rows="2" value={newTicketForm.issue} onChange={e => setNewTicketForm({...newTicketForm, issue: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold resize-none" placeholder="Reported Issue"></textarea>
+                                                <input type="text" value={newTicketForm.cost} onChange={e => setNewTicketForm({...newTicketForm, cost: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Cost (₹) - Leave 'Pending' if unknown"/>
+                                                <button type="submit" className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-2xl shadow-lg text-lg">Generate Ticket</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                )}
+                            </main>
+                        )}
+                    </div>
+
+                    {/* CART DRAWER */}
+                    {isCartOpen && (
+                        <div className="fixed inset-0 z-50 overflow-hidden">
+                            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setIsCartOpen(false)}></div>
+                            <div className="absolute inset-y-0 right-0 max-w-md w-full bg-zinc-950 text-white shadow-2xl flex flex-col border-l border-white/10 animate-slide-in-right">
+                                <div className="px-8 py-6 border-b border-white/10 flex items-center justify-between">
+                                    <h2 className="text-2xl font-black"><i className="fas fa-shopping-cart text-yellow-400"></i> Your Cart</h2>
+                                    <button onClick={() => setIsCartOpen(false)} className="p-2 text-zinc-400 hover:text-white"><i className="fas fa-times text-xl"></i></button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-8">
+                                    {cart.length === 0 ? (
+                                        <div className="text-center text-zinc-500 mt-20"><i className="fas fa-shopping-cart text-6xl mb-4 opacity-20"></i><p className="text-xl font-bold">Cart is empty</p></div>
+                                    ) : (
+                                        <div className="space-y-8">
+                                            {cart.map(item => (
+                                                <div key={item.id} className="flex gap-5 items-center">
+                                                    <img src={item.image} className="w-20 h-20 rounded-2xl object-cover border border-white/10 opacity-80" />
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-sm text-white mb-1">{item.name}</h4>
+                                                        <div className="text-yellow-400 font-black text-lg mb-2">{formatINR(item.price)}</div>
+                                                        <div className="flex items-center bg-white/10 rounded-xl p-1 w-max">
+                                                            <button onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 flex items-center justify-center text-white"><i className="fas fa-minus"></i></button>
+                                                            <span className="w-8 text-center text-sm font-black">{item.quantity}</span>
+                                                            <button onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 flex items-center justify-center text-white"><i className="fas fa-plus"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {cart.length > 0 && (
+                                    <div className="p-8 bg-black border-t border-white/10">
+                                        <div className="flex justify-between items-center mb-6"><span className="text-zinc-400 font-bold uppercase">Subtotal</span><span className="text-3xl font-black text-yellow-400">{formatINR(cartTotal)}</span></div>
+                                        <button onClick={() => setIsCheckoutModalOpen(true)} className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-4 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(255,215,0,0.2)]">Secure Checkout</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* FOOTER */}
+                    <footer className="bg-[#03050d] text-zinc-400 py-16 border-t border-white/10 mt-auto">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-12">
+                            <div className="space-y-6"><BrandLogo /><p className="text-sm font-medium">Your one-stop destination for laptop sales, expert repairs, custom builds, and accessories.</p></div>
+                            <div className="space-y-6"><h4 className="text-white font-black text-lg tracking-wide uppercase">Contact</h4>
+                                <ul className="space-y-4">
+                                    <li className="flex items-start gap-4"><i className="fas fa-map-marker-alt text-yellow-400 text-xl mt-1"></i><span className="text-sm font-medium">Annapurna Arcade, Above SBI Bank, PM Palem Main Road, Midhilapuri Vuda Layout, Madhurawada, AP 530041</span></li>
+                                    <li className="flex items-center gap-4"><i className="fas fa-phone text-yellow-400 text-xl"></i><span className="text-sm font-bold text-white">+91 90598 95427</span></li>
+                                </ul>
+                            </div>
+                            <div className="space-y-6"><h4 className="text-white font-black text-lg tracking-wide uppercase">Hours</h4>
+                                <ul className="space-y-4">
+                                    <li className="flex justify-between border-b border-white/10 pb-3"><span className="text-sm font-bold text-zinc-300">Mon - Sat</span><span className="text-sm font-black text-white">10:00 AM - 9:00 PM</span></li>
+                                    <li className="flex justify-between"><span className="text-sm font-bold text-zinc-300">Sunday</span><span className="text-sm font-black text-yellow-400">Closed</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
+                            <p className="text-sm font-bold">© {CURRENT_YEAR} Right Click Computers.</p>
+                            <button onClick={() => setCurrentView(isAdminAuthenticated ? 'admin' : 'admin-login')} className="flex items-center gap-2 hover:text-yellow-400 text-sm font-bold bg-white/5 px-4 py-2 rounded-xl border border-white/10"><i className="fas fa-lock"></i> {isAdminAuthenticated ? "Staff Dashboard" : "Staff Login"}</button>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
