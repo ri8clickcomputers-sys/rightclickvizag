@@ -104,7 +104,6 @@
             const [currentView, setCurrentView] = useState("store");
             const [toastMessage, setToastMessage] = useState("");
             
-            // Format dates accurately avoiding timezone bugs
             const formatDate = (dateStr) => {
                 if (!dateStr) return "";
                 if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -278,6 +277,35 @@
                 saveDataToCloudOrLocal(updatedData);
                 setEditingTicketId(null);
                 showToast(`Updated ${id}`);
+            };
+
+            // --- SMART WHATSAPP NOTIFICATION SYSTEM ---
+            const sendCustomerNotification = (ticket, id) => {
+                // Clean the mobile number to ensure it works properly on wa.me links
+                let mobileClean = String(ticket.mobile).replace(/\D/g, '');
+                
+                // If it's a standard 10 digit Indian number without country code, add 91 automatically
+                if(mobileClean.length === 10) {
+                    mobileClean = '91' + mobileClean;
+                }
+
+                let message = `Hello *${ticket.customer}*, this is an update from *Right Click Computers*!\n\n`;
+                message += `*Ticket ID:* ${id}\n`;
+                message += `*Device:* ${ticket.device}\n`;
+                message += `*Current Status:* ${ticket.status}\n`;
+                
+                if (ticket.cost && ticket.cost.toLowerCase() !== 'pending') {
+                    message += `*Estimated Cost:* ${formatINR(ticket.cost)}\n`;
+                }
+
+                if (ticket.status === 'Ready for Pickup') {
+                    message += `\nYour device is repaired and ready for pickup! You can visit our store during business hours.\n`;
+                }
+
+                message += `\nTrack your repair live here: https://ri8clickcomputers-sys.github.io/rightclickvizag`;
+                
+                const url = `https://wa.me/${mobileClean}?text=${encodeURIComponent(message)}`;
+                window.open(url, '_blank');
             };
 
             const processCheckout = () => {
@@ -582,12 +610,6 @@
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
                                     <div>
                                         <h2 className="text-3xl font-black text-white flex items-center gap-3"><i className="fas fa-users-cog text-yellow-400"></i> Staff Dashboard</h2>
-                                        <p className="text-zinc-400 font-medium mt-2">Manage repairs and update customer status. 
-                                            {GOOGLE_SHEETS_API_URL ? 
-                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10"><i className="fas fa-cloud"></i> CLOUD DB ACTIVE</span> : 
-                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10"><i className="fas fa-hdd"></i> LOCAL STORAGE MODE</span>
-                                            }
-                                        </p>
                                     </div>
                                     <div className="flex flex-wrap gap-4">
                                         <a href="https://docs.google.com/spreadsheets/d/1WFLMdwljIlxD3Mo3maRxsmSVI8-iDGJzhkyLspLEy8Q/edit" target="_blank" className="px-6 py-3 bg-[#0f9d58] hover:bg-[#0b8043] text-white font-bold rounded-xl shadow-[0_0_15px_rgba(15,157,88,0.3)] flex items-center gap-2 transition-colors"><i className="fas fa-file-excel"></i> Open Sheet</a>
@@ -647,8 +669,17 @@
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
                                                             </td>
+                                                            
+                                                            {/* ACTIONS WITH WHATSAPP BUTTON */}
                                                             <td className="p-5 text-right align-top">
-                                                                {isEditing ? <button onClick={() => saveTicketEdit(id)} className="bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm"><i className="fas fa-save"></i> Save</button> : <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="bg-zinc-100 text-zinc-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-200"><i className="fas fa-edit"></i> Edit</button>}
+                                                                {isEditing ? (
+                                                                    <button onClick={() => saveTicketEdit(id)} className="w-full mb-2 bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors"><i className="fas fa-save"></i> Save</button>
+                                                                ) : (
+                                                                    <div className="flex flex-col gap-2 items-end">
+                                                                        <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="w-full bg-zinc-100 text-zinc-700 px-5 py-2 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors"><i className="fas fa-edit"></i> Edit</button>
+                                                                        <button onClick={() => sendCustomerNotification(ticket, id)} className="w-full bg-[#25d366] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#20bd5a] transition-colors"><i className="fab fa-whatsapp"></i> Notify</button>
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     );
