@@ -104,6 +104,7 @@
             const [currentView, setCurrentView] = useState("store");
             const [toastMessage, setToastMessage] = useState("");
             
+            // Format dates accurately avoiding timezone bugs
             const formatDate = (dateStr) => {
                 if (!dateStr) return "";
                 if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -160,7 +161,7 @@
                 }
             }, []);
 
-            const saveDataToCloud = (data) => {
+            const saveDataToCloudOrLocal = (data) => {
                 setTicketsData(data); 
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL, {
@@ -171,6 +172,7 @@
                 }
             };
 
+            // --- AUTO DELETE SCRIPT ---
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -190,7 +192,7 @@
                         }
                         
                         if (hasDeletes) {
-                            saveDataToCloud(cleanedData);
+                            saveDataToCloudOrLocal(cleanedData);
                             return cleanedData;
                         }
                         return prevData;
@@ -260,7 +262,7 @@
                 };
 
                 const updatedData = { ...ticketsData, [customId]: newTicket };
-                saveDataToCloud(updatedData);
+                saveDataToCloudOrLocal(updatedData);
                 
                 setIsCreateModalOpen(false);
                 setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() });
@@ -273,7 +275,7 @@
                     updatedTicket.deliveredAt = Date.now();
                 }
                 const updatedData = { ...ticketsData, [id]: updatedTicket };
-                saveDataToCloud(updatedData);
+                saveDataToCloudOrLocal(updatedData);
                 setEditingTicketId(null);
                 showToast(`Updated ${id}`);
             };
@@ -580,6 +582,12 @@
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
                                     <div>
                                         <h2 className="text-3xl font-black text-white flex items-center gap-3"><i className="fas fa-users-cog text-yellow-400"></i> Staff Dashboard</h2>
+                                        <p className="text-zinc-400 font-medium mt-2">Manage repairs and update customer status. 
+                                            {GOOGLE_SHEETS_API_URL ? 
+                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10"><i className="fas fa-cloud"></i> CLOUD DB ACTIVE</span> : 
+                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10"><i className="fas fa-hdd"></i> LOCAL STORAGE MODE</span>
+                                            }
+                                        </p>
                                     </div>
                                     <div className="flex flex-wrap gap-4">
                                         <a href="https://docs.google.com/spreadsheets/d/1WFLMdwljIlxD3Mo3maRxsmSVI8-iDGJzhkyLspLEy8Q/edit" target="_blank" className="px-6 py-3 bg-[#0f9d58] hover:bg-[#0b8043] text-white font-bold rounded-xl shadow-[0_0_15px_rgba(15,157,88,0.3)] flex items-center gap-2 transition-colors"><i className="fas fa-file-excel"></i> Open Sheet</a>
