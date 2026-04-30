@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Right Click Computers | Premium Sales & Service</title>
     
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- React & Babel for in-browser compilation -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -30,6 +33,8 @@
         
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+        
+        ::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -44,7 +49,6 @@
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxVemzlfo2MEBg45kAyWRIPxbHfor9MokQ7RZJAtf-GsCVbBNs6BIHZql-4QM_S8eeV/exec"; 
         // ==========================================
 
-        // --- STORE DATA ---
         const PRODUCTS = [
             { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
             { id: 2, name: "Crucial P3 Plus 1TB NVMe SSD", category: "Components", price: 19000, image: "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 89 },
@@ -66,6 +70,14 @@
             "Custom gaming PC assembly was flawless. Very satisfied with the expertise.",
             "MacBook screen replacement done quickly and efficiently. Great team!"
         ];
+
+        const getTodayYYYYMMDD = () => {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
 
         const BrandLogo = () => (
             <div className="flex items-center gap-3 cursor-pointer">
@@ -92,12 +104,15 @@
             const [currentView, setCurrentView] = useState("store");
             const [toastMessage, setToastMessage] = useState("");
             
-            // Fixes Google Sheets raw ISO Dates to display beautifully
             const formatDate = (dateStr) => {
                 if (!dateStr) return "";
-                if (typeof dateStr === 'string' && dateStr.includes("T") && dateStr.includes("Z")) {
-                    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                    const [y, m, d] = dateStr.split('-');
+                    const dateObj = new Date(y, m - 1, d);
+                    return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 }
+                const d = new Date(dateStr);
+                if (!isNaN(d)) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 return dateStr;
             };
 
@@ -120,50 +135,42 @@
             const [ticketsData, setTicketsData] = useState({});
             const [editingTicketId, setEditingTicketId] = useState(null);
             const [editFormData, setEditFormData] = useState({});
+            
             const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-            const [newTicketForm, setNewTicketForm] = useState({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", cost: "Pending" });
+            const [newTicketForm, setNewTicketForm] = useState({ 
+                serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() 
+            });
 
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
             // --- DATABASE SYNC ---
-            const loadLocalData = () => {
-                const saved = localStorage.getItem('rightclick_tickets');
-                if (saved) setTicketsData(JSON.parse(saved));
-                else setTicketsData({}); // Clean slate
-            };
-
             useEffect(() => {
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL)
                         .then(res => res.json())
                         .then(data => {
-                            setTicketsData(data || {}); // Loads empty object if sheet is empty
+                            if (Object.keys(data).length > 0) {
+                                setTicketsData(data);
+                            }
                         })
                         .catch(err => {
-                            console.error("Failed to connect to Google Sheets, using Local Storage", err);
-                            loadLocalData();
+                            console.error("Failed to connect to Google Sheets");
                         });
-                } else {
-                    loadLocalData();
                 }
             }, []);
 
-            const saveDataToCloudOrLocal = (data) => {
+            const saveDataToCloud = (data) => {
                 setTicketsData(data); 
-                
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify(data)
                     }).catch(err => console.error("Cloud Save Error:", err));
-                } else {
-                    localStorage.setItem('rightclick_tickets', JSON.stringify(data));
                 }
             };
 
-            // --- AUTO DELETE SCRIPT ---
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -183,7 +190,7 @@
                         }
                         
                         if (hasDeletes) {
-                            saveDataToCloudOrLocal(cleanedData);
+                            saveDataToCloud(cleanedData);
                             return cleanedData;
                         }
                         return prevData;
@@ -248,16 +255,15 @@
 
                 const newTicket = {
                     customer: newTicketForm.customer, mobile: newTicketForm.mobile,
-                    device: newTicketForm.device, issue: newTicketForm.issue,
-                    status: "Received", date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                    cost: newTicketForm.cost || "Pending"
+                    device: newTicketForm.device, issue: newTicketForm.issue, remarks: newTicketForm.remarks,
+                    status: "Received", date: newTicketForm.date, cost: newTicketForm.cost || "Pending"
                 };
 
                 const updatedData = { ...ticketsData, [customId]: newTicket };
-                saveDataToCloudOrLocal(updatedData);
+                saveDataToCloud(updatedData);
                 
                 setIsCreateModalOpen(false);
-                setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", cost: "Pending" });
+                setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() });
                 showToast(`Created: ${customId}`);
             };
 
@@ -267,16 +273,14 @@
                     updatedTicket.deliveredAt = Date.now();
                 }
                 const updatedData = { ...ticketsData, [id]: updatedTicket };
-                saveDataToCloudOrLocal(updatedData);
+                saveDataToCloud(updatedData);
                 setEditingTicketId(null);
                 showToast(`Updated ${id}`);
             };
 
             const processCheckout = () => {
                 let orderText = `Hello Right Click Computers! I would like to securely place an order:%0A%0A`;
-                cart.forEach(item => {
-                    orderText += `▪ ${item.quantity}x ${item.name} (${formatINR(item.price * item.quantity)})%0A`;
-                });
+                cart.forEach(item => { orderText += `▪ ${item.quantity}x ${item.name} (${formatINR(item.price * item.quantity)})%0A`; });
                 orderText += `%0A*Total Value: ${formatINR(cartTotal)}*%0A%0AHow should I proceed with the payment?`;
                 window.open(`https://wa.me/919059895427?text=${orderText}`, '_blank');
                 setIsCheckoutModalOpen(false);
@@ -387,7 +391,7 @@
 
                                 <div className="bg-yellow-400 py-3 overflow-hidden border-y border-yellow-500">
                                     <div className="whitespace-nowrap inline-block animate-scroll-left text-black font-black tracking-widest text-lg">
-                                          • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
+                                        &nbsp; • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY • CHIP LEVEL REPAIR • MACBOOK SPECIALIST • CUSTOM GAMING PCs • CCTV INSTALLATION • DATA RECOVERY •
                                     </div>
                                 </div>
 
@@ -459,7 +463,7 @@
                                         const ticket = ticketsData[fullSearchId];
                                         
                                         const inputMobileClean = trackingMobile.trim().replace(/\D/g, '');
-                                        const storedMobileClean = ticket ? String(ticket.mobile).trim().replace(/\D/g, '') : null;
+                                        const storedMobileClean = ticket && ticket.mobile ? String(ticket.mobile).trim().replace(/\D/g, '') : null;
 
                                         if (ticket && inputMobileClean === storedMobileClean) { 
                                             setSearchedTicket({ ...ticket, fullId: fullSearchId }); 
@@ -510,9 +514,20 @@
                                                     <div className="bg-zinc-200 p-4 rounded-2xl text-zinc-600"><i className="fas fa-calendar-alt text-2xl"></i></div>
                                                     <div><p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">Drop-off Date</p><p className="font-black text-zinc-900 text-xl">{formatDate(searchedTicket.date)}</p></div>
                                                 </div>
+                                                
+                                                {searchedTicket.remarks && (
+                                                    <div className="md:col-span-2 bg-blue-50 border border-blue-100 rounded-3xl p-8 flex items-start gap-5">
+                                                        <div className="bg-blue-200 p-4 rounded-2xl text-blue-600"><i className="fas fa-comment-dots text-2xl"></i></div>
+                                                        <div className="w-full">
+                                                            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Staff Remarks & Device Condition</p>
+                                                            <p className="font-bold text-zinc-900 text-lg whitespace-pre-wrap leading-relaxed">{searchedTicket.remarks}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="relative pt-4 pb-8">
-                                                <h4 className="text-2xl font-black text-zinc-950 mb-12 flex items-center gap-3"><i className="fas fa-tasks text-yellow-500"></i> Current Status</h4>
+
+                                            <div className="relative pt-4 pb-8 border-t border-zinc-200">
+                                                <h4 className="text-2xl font-black text-zinc-950 mb-12 mt-8 flex items-center gap-3"><i className="fas fa-tasks text-yellow-500"></i> Current Status</h4>
                                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10 gap-8 md:gap-0 px-2">
                                                     <div className="hidden md:block absolute top-8 left-[5%] right-[5%] h-2 bg-zinc-100 rounded-full -z-10"></div>
                                                     {['Received', 'Diagnosing', 'Repairing', 'Ready for Pickup', 'Delivered'].map((step, index) => {
@@ -528,7 +543,6 @@
                                                                 <div className="text-left md:text-center mt-2">
                                                                     <p className={`font-black tracking-tight ${isCurrent ? 'text-zinc-950 text-xl' : isCompleted ? 'text-zinc-700' : 'text-zinc-400'}`}>{step}</p>
                                                                     {isCurrent && step !== 'Delivered' && <p className="text-xs font-black tracking-widest text-yellow-600 uppercase mt-1 animate-pulse">In Progress</p>}
-                                                                    {isCurrent && step === 'Delivered' && <p className="text-xs font-black tracking-widest text-zinc-500 uppercase mt-1">Completed</p>}
                                                                 </div>
                                                             </div>
                                                         );
@@ -544,7 +558,7 @@
                         {/* ADMIN LOGIN VIEW */}
                         {currentView === "admin-login" && (
                             <main className="flex items-center justify-center py-20 px-4 min-h-[70vh]">
-                                <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md animate-slide-in-right text-zinc-900">
+                                <div className="bg-white p-10 rounded-[40px] shadow-2xl w-full max-w-md animate-slide-in-right text-zinc-900 border border-zinc-200">
                                     <div className="text-center mb-10">
                                         <div className="bg-zinc-100 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"><i className="fas fa-lock text-4xl text-zinc-900"></i></div>
                                         <h2 className="text-3xl font-black text-zinc-950">Staff Portal</h2>
@@ -566,14 +580,9 @@
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
                                     <div>
                                         <h2 className="text-3xl font-black text-white flex items-center gap-3"><i className="fas fa-users-cog text-yellow-400"></i> Staff Dashboard</h2>
-                                        <p className="text-zinc-400 font-medium mt-2">Manage repairs and update customer status. 
-                                            {GOOGLE_SHEETS_API_URL ? 
-                                                <span className="text-green-400 text-xs ml-2 border border-green-400/50 px-2 py-1 rounded bg-green-400/10"><i className="fas fa-cloud"></i> CLOUD DB ACTIVE</span> : 
-                                                <span className="text-yellow-400 text-xs ml-2 border border-yellow-400/50 px-2 py-1 rounded bg-yellow-400/10"><i className="fas fa-hdd"></i> LOCAL STORAGE MODE</span>
-                                            }
-                                        </p>
                                     </div>
                                     <div className="flex flex-wrap gap-4">
+                                        <a href="https://docs.google.com/spreadsheets/d/1WFLMdwljIlxD3Mo3maRxsmSVI8-iDGJzhkyLspLEy8Q/edit" target="_blank" className="px-6 py-3 bg-[#0f9d58] hover:bg-[#0b8043] text-white font-bold rounded-xl shadow-[0_0_15px_rgba(15,157,88,0.3)] flex items-center gap-2 transition-colors"><i className="fas fa-file-excel"></i> Open Sheet</a>
                                         <button onClick={() => setIsCreateModalOpen(true)} className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-xl shadow-[0_0_15px_rgba(255,215,0,0.3)] flex items-center gap-2"><i className="fas fa-plus"></i> New Ticket</button>
                                         <button onClick={handleAdminLogout} className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center gap-2"><i className="fas fa-sign-out-alt"></i> Logout</button>
                                     </div>
@@ -584,9 +593,9 @@
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-zinc-100 text-zinc-500 border-b border-zinc-200">
-                                                    <th className="p-5 font-black text-xs uppercase">Ticket ID</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Ticket ID & Date</th>
                                                     <th className="p-5 font-black text-xs uppercase">Customer Info</th>
-                                                    <th className="p-5 font-black text-xs uppercase">Device</th>
+                                                    <th className="p-5 font-black text-xs uppercase">Device & Remarks</th>
                                                     <th className="p-5 font-black text-xs uppercase">Status</th>
                                                     <th className="p-5 font-black text-xs uppercase">Cost (₹)</th>
                                                     <th className="p-5 font-black text-xs uppercase text-right">Actions</th>
@@ -597,22 +606,40 @@
                                                     const isEditing = editingTicketId === id;
                                                     return (
                                                         <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
-                                                            <td className="p-5 font-mono font-black text-zinc-900">{id}<div className="text-[10px] text-zinc-400 mt-1 uppercase">{formatDate(ticket.date)}</div></td>
-                                                            <td className="p-5"><p className="font-black text-zinc-900">{ticket.customer}</p>{ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}</td>
-                                                            <td className="p-5 font-bold">{ticket.device}</td>
-                                                            <td className="p-5">
+                                                            <td className="p-5 font-mono font-black text-zinc-900 align-top">
+                                                                {id}
+                                                                {isEditing ? (
+                                                                    <div className="mt-2">
+                                                                        <input type="date" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none" value={editFormData.date || ""} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-[10px] text-zinc-500 mt-1 uppercase font-bold tracking-widest">{formatDate(ticket.date)}</div>
+                                                                )}
+                                                            </td>
+                                                            <td className="p-5 align-top"><p className="font-black text-zinc-900">{ticket.customer}</p>{ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}</td>
+                                                            
+                                                            <td className="p-5 align-top max-w-[250px]">
+                                                                <p className="font-bold text-zinc-900 mb-1">{ticket.device}</p>
+                                                                {isEditing ? (
+                                                                    <textarea rows="2" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none resize-none mt-2" placeholder="Add remarks..." value={editFormData.remarks || ""} onChange={(e) => setEditFormData({...editFormData, remarks: e.target.value})}></textarea>
+                                                                ) : (
+                                                                    ticket.remarks && <p className="text-xs text-zinc-500 font-medium italic mt-1 line-clamp-2" title={ticket.remarks}>"{ticket.remarks}"</p>
+                                                                )}
+                                                            </td>
+                                                            
+                                                            <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <select className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}>
                                                                         <option value="Received">Received</option><option value="Diagnosing">Diagnosing</option><option value="Repairing">Repairing</option><option value="Ready for Pickup">Ready for Pickup</option><option value="Delivered">Delivered</option>
                                                                     </select>
                                                                 ) : (
-                                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-black ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-700' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
+                                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-700' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
                                                                 )}
                                                             </td>
-                                                            <td className="p-5">
+                                                            <td className="p-5 align-top">
                                                                 {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
                                                             </td>
-                                                            <td className="p-5 text-right">
+                                                            <td className="p-5 text-right align-top">
                                                                 {isEditing ? <button onClick={() => saveTicketEdit(id)} className="bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm"><i className="fas fa-save"></i> Save</button> : <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="bg-zinc-100 text-zinc-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-200"><i className="fas fa-edit"></i> Edit</button>}
                                                             </td>
                                                         </tr>
@@ -627,25 +654,45 @@
                                 {isCreateModalOpen && (
                                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                                         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)}></div>
-                                        <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-xl relative z-10 text-zinc-900 overflow-hidden">
+                                        <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-xl relative z-10 text-zinc-900 overflow-hidden animate-slide-in-right">
                                             <div className="flex justify-between items-center p-8 bg-zinc-50 border-b border-zinc-200">
                                                 <h3 className="text-2xl font-black text-zinc-950"><i className="fas fa-ticket-alt text-yellow-500"></i> New Ticket</h3>
                                                 <button onClick={() => setIsCreateModalOpen(false)} className="text-zinc-400 hover:text-zinc-900 bg-zinc-200/50 p-2 rounded-full"><i className="fas fa-times"></i></button>
                                             </div>
-                                            <form onSubmit={handleCreateTicket} className="p-8 space-y-5">
-                                                <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20">
-                                                    <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 py-4 flex items-center border-r border-zinc-200">{PREFIX}-</div>
-                                                    <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-4 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="001"/>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-5">
-                                                    <input type="text" required value={newTicketForm.customer} onChange={e => setNewTicketForm({...newTicketForm, customer: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Customer Name"/>
-                                                    <input type="text" required value={newTicketForm.mobile} onChange={e => setNewTicketForm({...newTicketForm, mobile: e.target.value})} className="w-full p-4 bg-blue-50/50 border border-blue-100 rounded-2xl focus:border-blue-400 font-bold" placeholder="Mobile Number"/>
-                                                </div>
-                                                <input type="text" required value={newTicketForm.device} onChange={e => setNewTicketForm({...newTicketForm, device: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Device Model"/>
-                                                <textarea required rows="2" value={newTicketForm.issue} onChange={e => setNewTicketForm({...newTicketForm, issue: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold resize-none" placeholder="Reported Issue"></textarea>
-                                                <input type="text" value={newTicketForm.cost} onChange={e => setNewTicketForm({...newTicketForm, cost: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Cost (₹) - Leave 'Pending' if unknown"/>
-                                                <button type="submit" className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-2xl shadow-lg text-lg">Generate Ticket</button>
-                                            </form>
+                                            
+                                            <div className="max-h-[70vh] overflow-y-auto hide-scrollbar">
+                                                <form onSubmit={handleCreateTicket} className="p-8 space-y-5">
+                                                    <div className="grid grid-cols-2 gap-5">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Serial Number</label>
+                                                            <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20">
+                                                                <div className="bg-zinc-100 text-zinc-500 font-black text-sm px-4 py-4 flex items-center border-r border-zinc-200">{PREFIX}-</div>
+                                                                <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-3 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="001"/>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Drop-off Date</label>
+                                                            <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20 bg-white">
+                                                                <input type="date" required value={newTicketForm.date} onChange={e => setNewTicketForm({...newTicketForm, date: e.target.value})} className="w-full px-4 py-4 focus:outline-none font-bold text-zinc-900" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-5">
+                                                        <input type="text" required value={newTicketForm.customer} onChange={e => setNewTicketForm({...newTicketForm, customer: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Customer Name"/>
+                                                        <input type="text" required value={newTicketForm.mobile} onChange={e => setNewTicketForm({...newTicketForm, mobile: e.target.value})} className="w-full p-4 bg-blue-50/50 border border-blue-100 rounded-2xl focus:border-blue-400 font-bold text-blue-900" placeholder="Mobile Number"/>
+                                                    </div>
+                                                    <input type="text" required value={newTicketForm.device} onChange={e => setNewTicketForm({...newTicketForm, device: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Device Model"/>
+                                                    <textarea required rows="2" value={newTicketForm.issue} onChange={e => setNewTicketForm({...newTicketForm, issue: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold resize-none" placeholder="Reported Issue"></textarea>
+                                                    
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Device Condition & Remarks</label>
+                                                        <textarea rows="2" value={newTicketForm.remarks} onChange={e => setNewTicketForm({...newTicketForm, remarks: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold resize-none" placeholder="e.g. Scratches on lid, no charger given..."></textarea>
+                                                    </div>
+
+                                                    <input type="text" value={newTicketForm.cost} onChange={e => setNewTicketForm({...newTicketForm, cost: e.target.value})} className="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-2xl focus:border-yellow-400 font-bold" placeholder="Cost (₹) - Leave 'Pending' if unknown"/>
+                                                    <button type="submit" className="w-full py-4 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-2xl shadow-lg text-lg mt-2">Generate Ticket</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
