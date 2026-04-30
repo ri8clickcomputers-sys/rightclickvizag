@@ -646,7 +646,19 @@
                                                                     <div className="text-[10px] text-zinc-500 mt-1 uppercase font-bold tracking-widest">{formatDate(ticket.date)}</div>
                                                                 )}
                                                             </td>
-                                                            <td className="p-5 align-top"><p className="font-black text-zinc-900">{ticket.customer}</p>{ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}</td>
+                                                            <td className="p-5 align-top">
+                                                                {isEditing ? (
+                                                                    <div className="flex flex-col gap-2">
+                                                                        <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none" value={editFormData.customer || ""} onChange={(e) => setEditFormData({...editFormData, customer: e.target.value})} placeholder="Customer Name" />
+                                                                        <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none" value={editFormData.mobile || ""} onChange={(e) => setEditFormData({...editFormData, mobile: e.target.value})} placeholder="Mobile Number" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <React.Fragment>
+                                                                        <p className="font-black text-zinc-900">{ticket.customer}</p>
+                                                                        {ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}
+                                                                    </React.Fragment>
+                                                                )}
+                                                            </td>
                                                             
                                                             <td className="p-5 align-top max-w-[250px]">
                                                                 <p className="font-bold text-zinc-900 mb-1">{ticket.device}</p>
