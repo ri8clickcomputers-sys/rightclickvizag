@@ -625,7 +625,7 @@
                             </main>
                         )}
 
-                        {/* ADMIN DASHBOARD VIEW */}
+                        {/* ADMIN DASHBOARD VIEW (SORTED BY DATE & SERIAL DESCENDING) */}
                         {currentView === "admin" && isAdminAuthenticated && (
                             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
@@ -653,7 +653,23 @@
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-zinc-100">
-                                                {Object.entries(ticketsData).sort((a, b) => b[0].localeCompare(a[0])).map(([id, ticket]) => {
+                                                {Object.entries(ticketsData)
+                                                    .sort(([idA, a], [idB, b]) => {
+                                                        // 1. Sort by Date Descending (Newest date first)
+                                                        const dateA = a.date || "";
+                                                        const dateB = b.date || "";
+                                                        if (dateA !== dateB) {
+                                                            return dateB.localeCompare(dateA);
+                                                        }
+                                                        // 2. Secondary Sort by Ticket Serial Number Descending
+                                                        const numA = parseInt(idA.replace(/\D/g, ''), 10) || 0;
+                                                        const numB = parseInt(idB.replace(/\D/g, ''), 10) || 0;
+                                                        if (numA !== numB) {
+                                                            return numB - numA;
+                                                        }
+                                                        return idB.localeCompare(idA);
+                                                    })
+                                                    .map(([id, ticket]) => {
                                                     const isEditing = editingTicketId === id;
                                                     const cleanMobileDigits = ticket.mobile ? String(ticket.mobile).replace(/\D/g, '') : '';
                                                     return (
