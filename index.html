@@ -482,7 +482,7 @@
                             </>
                         )}
 
-                        {/* PUBLIC REPAIR TRACKING VIEW */}
+                        {/* PUBLIC REPAIR TRACKING VIEW (FLEXIBLE MATCHING) */}
                         {currentView === "tracking" && (
                             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                                 <div className="text-center mb-16 animate-slide-in-right">
@@ -492,25 +492,43 @@
                                 <div className="bg-white/5 p-8 md:p-10 rounded-[40px] border border-white/10 mb-12 max-w-2xl mx-auto animate-slide-in-right backdrop-blur-xl">
                                     <form onSubmit={(e) => {
                                         e.preventDefault();
-                                        const fullSearchId = `${PREFIX}-${trackingSerial.trim()}`.toUpperCase();
-                                        const ticket = ticketsData[fullSearchId];
-                                        
-                                        const inputMobileClean = trackingMobile.trim().replace(/\D/g, '');
-                                        const storedMobileClean = ticket && ticket.mobile ? String(ticket.mobile).trim().replace(/\D/g, '') : null;
+                                        const cleanSerialInput = trackingSerial.trim().toUpperCase();
+                                        const cleanMobileInput = trackingMobile.trim().replace(/\D/g, '');
 
-                                        if (ticket && inputMobileClean === storedMobileClean) { 
-                                            setSearchedTicket({ ...ticket, fullId: fullSearchId }); 
+                                        // FLEXIBLE MATCHING FOR TICKET ID (Matches "01", "RC2026-01", "489", "RC2026-489")
+                                        const matchedKey = Object.keys(ticketsData).find(idKey => {
+                                            const idUpper = idKey.toUpperCase();
+                                            return idUpper === cleanSerialInput || 
+                                                   idUpper === `${PREFIX}-${cleanSerialInput}` ||
+                                                   idUpper.endsWith(`-${cleanSerialInput}`);
+                                        });
+
+                                        if (!matchedKey) {
+                                            setSearchedTicket(null);
+                                            setTrackingError("No active ticket found with this Ticket ID.");
+                                            return;
+                                        }
+
+                                        const ticket = ticketsData[matchedKey];
+                                        const storedMobileDigits = ticket && ticket.mobile ? String(ticket.mobile).replace(/\D/g, '') : "";
+
+                                        // FLEXIBLE MOBILE MATCHING (Compares last 10 digits to handle +91, 0, or clean numbers)
+                                        const mobileMatches = cleanMobileInput.length >= 10 && storedMobileDigits.length >= 10 &&
+                                                              cleanMobileInput.slice(-10) === storedMobileDigits.slice(-10);
+
+                                        if (ticket && mobileMatches) { 
+                                            setSearchedTicket({ ...ticket, fullId: matchedKey }); 
                                             setTrackingError(""); 
                                         } else { 
                                             setSearchedTicket(null); 
-                                            setTrackingError(`No active ticket found with this ID and Mobile Number combination.`); 
+                                            setTrackingError("Mobile number does not match the ticket record. Please verify and try again."); 
                                         }
                                     }} className="flex flex-col gap-4">
                                         
                                         <div className="flex flex-col sm:flex-row gap-4">
                                             <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
                                                 <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 flex items-center border-r border-zinc-200 select-none" title="Ticket Year">{PREFIX}-</div>
-                                                <input type="text" placeholder="Ticket Serial (e.g. 1001)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 uppercase text-lg" required />
+                                                <input type="text" placeholder="Ticket Serial (e.g. 01 or 489)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 uppercase text-lg" required />
                                             </div>
                                             <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
                                                 <div className="bg-zinc-100 text-zinc-500 px-6 flex items-center border-r border-zinc-200" title="Security Verification"><i className="fas fa-mobile-alt text-lg"></i></div>
@@ -622,23 +640,26 @@
                                 </div>
 
                                 <div className="bg-white rounded-[30px] shadow-2xl overflow-hidden text-zinc-900">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
+                                    <div className="overflow-x-auto hide-scrollbar">
+                                        <table className="w-full text-left border-collapse min-w-[850px]">
                                             <thead>
                                                 <tr className="bg-zinc-100 text-zinc-500 border-b border-zinc-200">
-                                                    <th className="p-5 font-black text-xs uppercase">Ticket ID & Date</th>
-                                                    <th className="p-5 font-black text-xs uppercase">Customer Info</th>
-                                                    <th className="p-5 font-black text-xs uppercase">Device & Remarks</th>
-                                                    <th className="p-5 font-black text-xs uppercase">Status</th>
-                                                    <th className="p-5 font-black text-xs uppercase">Cost (₹)</th>
-                                                    <th className="p-5 font-black text-xs uppercase text-right">Actions</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[160px]">Ticket ID & Date</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[180px]">Customer Info</th>
+                                                    <th className="p-5 font-black text-xs uppercase min-w-[220px]">Device & Remarks</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[140px]">Status</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[110px]">Cost (₹)</th>
+                                                    <th className="p-5 font-black text-xs uppercase text-right w-[120px]">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-zinc-100">
                                                 {Object.entries(ticketsData).sort((a, b) => b[0].localeCompare(a[0])).map(([id, ticket]) => {
                                                     const isEditing = editingTicketId === id;
+                                                    const cleanMobileDigits = ticket.mobile ? String(ticket.mobile).replace(/\D/g, '') : '';
                                                     return (
                                                         <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
+                                                            
+                                                            {/* COL 1: TICKET ID & DATE */}
                                                             <td className="p-5 font-mono font-black text-zinc-900 align-top">
                                                                 {id}
                                                                 {isEditing ? (
@@ -649,6 +670,8 @@
                                                                     <div className="text-[10px] text-zinc-500 mt-1 uppercase font-bold tracking-widest">{formatDate(ticket.date)}</div>
                                                                 )}
                                                             </td>
+
+                                                            {/* COL 2: CUSTOMER INFO & CLICK-TO-DIAL PHONE LINK */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -658,12 +681,22 @@
                                                                 ) : (
                                                                     <React.Fragment>
                                                                         <p className="font-black text-zinc-900">{ticket.customer}</p>
-                                                                        {ticket.mobile && <a href={`tel:${ticket.mobile}`} className="text-xs text-blue-600 font-bold mt-1.5 flex items-center gap-1"><i className="fas fa-phone"></i> {ticket.mobile}</a>}
+                                                                        {ticket.mobile && (
+                                                                            <a 
+                                                                                href={`tel:${cleanMobileDigits}`} 
+                                                                                className="text-xs text-blue-600 font-bold mt-1.5 inline-flex items-center gap-1.5 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"
+                                                                                title="Click to dial customer"
+                                                                            >
+                                                                                <i className="fas fa-phone-alt text-[10px]"></i> 
+                                                                                <span>{ticket.mobile}</span>
+                                                                            </a>
+                                                                        )}
                                                                     </React.Fragment>
                                                                 )}
                                                             </td>
                                                             
-                                                            <td className="p-5 align-top max-w-[250px]">
+                                                            {/* COL 3: DEVICE & REMARKS */}
+                                                            <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
                                                                         <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none font-bold" value={editFormData.device || ""} onChange={(e) => setEditFormData({...editFormData, device: e.target.value})} placeholder="Device Model" />
@@ -677,6 +710,7 @@
                                                                 )}
                                                             </td>
                                                             
+                                                            {/* COL 4: STATUS */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <select className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}>
@@ -690,11 +724,13 @@
                                                                     <span className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-700' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
                                                                 )}
                                                             </td>
+
+                                                            {/* COL 5: COST */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
                                                             </td>
                                                             
-                                                            {/* ACTIONS WITH WHATSAPP BUTTON */}
+                                                            {/* COL 6: ACTIONS */}
                                                             <td className="p-5 text-right align-top">
                                                                 {isEditing ? (
                                                                     <button onClick={() => saveTicketEdit(id)} className="w-full mb-2 bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors"><i className="fas fa-save"></i> Save</button>
@@ -730,7 +766,7 @@
                                                             <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Serial Number</label>
                                                             <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20">
                                                                 <div className="bg-zinc-100 text-zinc-500 font-black text-sm px-4 py-4 flex items-center border-r border-zinc-200">{PREFIX}-</div>
-                                                                <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-3 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="001"/>
+                                                                <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-3 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="01 or 490"/>
                                                             </div>
                                                         </div>
                                                         <div>
