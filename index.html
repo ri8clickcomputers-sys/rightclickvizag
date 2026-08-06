@@ -79,7 +79,7 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BULLETPROOF PARSER WITH EXPLICIT INDEXES ---
+        // --- BUG-FREE PARSER WITH EXPLICIT INDEXES ---
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
                 return {
@@ -97,28 +97,33 @@
             let rawDate = ticket.date ? String(ticket.date).trim() : "";
             let rawCost = ticket.cost ? String(ticket.cost).trim() : "Pending";
 
-            // If customer string was accidentally concatenated with commas
+            // If rawCustomer was concatenated with commas
             if (rawCustomer.includes(",")) {
-                let parts = rawCustomer.split(",").map(s => s.trim());
-                if (parts.length >= 2) {
-                    rawCustomer = parts || parts[0];
-                    if (parts) rawMobile = parts;
-                    if (parts) rawDevice = parts;
-                    if (parts) rawIssue = parts;
-                    if (parts) rawRemarks = parts;
-                    if (parts) rawStatus = parts;
-                    if (parts) rawDate = parts;
-                    if (parts[8]) rawCost = parts[8];
+                let items = rawCustomer.split(",").map(s => String(s).trim());
+                if (items.length >= 2) {
+                    rawCustomer = items || items[0] || "";
+                    if (items) rawMobile = items;
+                    if (items) rawDevice = items;
+                    if (items) rawIssue = items;
+                    if (items) rawRemarks = items;
+                    if (items) rawStatus = items;
+                    if (items) rawDate = items;
+                    if (items) rawCost = items;
                 }
             }
 
+            rawCustomer = String(rawCustomer);
+            rawMobile = String(rawMobile);
+            rawDevice = String(rawDevice);
+            rawRemarks = String(rawRemarks);
+
             // Extract clean 10-digit mobile number
-            let mobileClean = String(rawMobile).replace(/\D/g, '');
+            let mobileClean = rawMobile.replace(/\D/g, '');
             if (mobileClean.length > 10) {
                 mobileClean = mobileClean.slice(-10);
             }
 
-            // Strip any Ticket ID prefix attached to customer name
+            // Strip Ticket ID prefix from customer name
             let cleanCustomer = rawCustomer.replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
             return {
