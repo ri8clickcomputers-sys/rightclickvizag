@@ -79,7 +79,6 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- SAFE TICKET PARSER WITH EXPLICIT ARRAY INDEXING ---
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
                 return {
@@ -97,7 +96,6 @@
             let rawDate = ticket.date !== undefined && ticket.date !== null ? String(ticket.date).trim() : "";
             let rawCost = ticket.cost !== undefined && ticket.cost !== null ? String(ticket.cost).trim() : "Pending";
 
-            // If rawCustomer was concatenated with commas
             if (rawCustomer.includes(",")) {
                 let items = rawCustomer.split(",").map(s => String(s).trim());
                 if (items.length >= 2) {
@@ -117,13 +115,11 @@
             rawDevice = String(rawDevice);
             rawRemarks = String(rawRemarks);
 
-            // Extract clean 10-digit mobile number
             let mobileClean = rawMobile.replace(/\D/g, '');
             if (mobileClean.length > 10) {
                 mobileClean = mobileClean.slice(-10);
             }
 
-            // Strip Ticket ID prefix from customer name
             let cleanCustomer = rawCustomer.replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
             return {
@@ -204,9 +200,7 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // --- INSTANT DUAL-SYNC INITIAL LOAD ---
             useEffect(() => {
-                // 1. Instant local cache load
                 const localSaved = localStorage.getItem("rightclick_tickets");
                 if (localSaved) {
                     try {
@@ -217,7 +211,6 @@
                     } catch(e) {}
                 }
 
-                // 2. Fetch fresh live data from Google Sheets API
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL)
                         .then(res => res.json())
@@ -253,7 +246,6 @@
                 }
             };
 
-            // --- AUTO DELETE CLEANUP ---
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -366,7 +358,6 @@
                 showToast(`Updated ${id}`);
             };
 
-            // --- SANITIZED WHATSAPP NOTIFICATION ---
             const sendCustomerNotification = (ticket, id) => {
                 let mobileClean = String(ticket.mobile).replace(/\D/g, '');
                 
@@ -564,7 +555,7 @@
                             </>
                         )}
 
-                        {/* PUBLIC REPAIR TRACKING VIEW (FLEXIBLE MATCHING) */}
+                        {/* PUBLIC REPAIR TRACKING VIEW */}
                         {currentView === "tracking" && (
                             <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                                 <div className="text-center mb-16 animate-slide-in-right">
@@ -577,7 +568,6 @@
                                         const cleanSerialInput = trackingSerial.trim().toUpperCase();
                                         const cleanMobileInput = trackingMobile.trim().replace(/\D/g, '');
 
-                                        // FLEXIBLE MATCHING FOR TICKET ID (Matches "01", "RC2026-01", "798", "RC2026-798")
                                         const matchedKey = Object.keys(ticketsData).find(idKey => {
                                             const idUpper = idKey.toUpperCase();
                                             return idUpper === cleanSerialInput || 
@@ -594,7 +584,6 @@
                                         const ticket = ticketsData[matchedKey];
                                         const storedMobileDigits = ticket && ticket.mobile ? String(ticket.mobile).replace(/\D/g, '') : "";
 
-                                        // FLEXIBLE MOBILE MATCHING (Compares last 10 digits to handle +91, 0, or clean numbers)
                                         const mobileMatches = cleanMobileInput.length >= 10 && storedMobileDigits.length >= 10 &&
                                                               cleanMobileInput.slice(-10) === storedMobileDigits.slice(-10);
 
@@ -707,7 +696,7 @@
                             </main>
                         )}
 
-                        {/* ADMIN DASHBOARD VIEW (BASE CONCEPT UNTOUCHED) */}
+                        {/* ADMIN DASHBOARD VIEW */}
                         {currentView === "admin" && isAdminAuthenticated && (
                             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
@@ -737,13 +726,11 @@
                                             <tbody className="divide-y divide-zinc-100">
                                                 {Object.entries(ticketsData)
                                                     .sort(([idA, a], [idB, b]) => {
-                                                        // 1. Sort by Date Descending (Newest date first)
                                                         const dateA = a.date || "";
                                                         const dateB = b.date || "";
                                                         if (dateA !== dateB) {
                                                             return dateB.localeCompare(dateA);
                                                         }
-                                                        // 2. Secondary Sort by Ticket Serial Number Descending
                                                         const numA = parseInt(idA.replace(/\D/g, ''), 10) || 0;
                                                         const numB = parseInt(idB.replace(/\D/g, ''), 10) || 0;
                                                         if (numA !== numB) {
@@ -757,7 +744,7 @@
                                                     return (
                                                         <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
                                                             
-                                                            {/* COL 1: TICKET ID & DATE ONLY */}
+                                                            {/* COL 1: TICKET ID & DATE */}
                                                             <td className="p-5 font-mono font-black text-zinc-900 align-top">
                                                                 <div className="text-base font-black tracking-tight">{id}</div>
                                                                 {isEditing ? (
@@ -769,7 +756,7 @@
                                                                 )}
                                                             </td>
 
-                                                            {/* COL 2: CUSTOMER NAME & CLICK-TO-DIAL MOBILE LINK ONLY */}
+                                                            {/* COL 2: CUSTOMER NAME & DIALABLE PHONE */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -793,7 +780,7 @@
                                                                 )}
                                                             </td>
                                                             
-                                                            {/* COL 3: DEVICE MODEL & REMARKS ONLY */}
+                                                            {/* COL 3: DEVICE MODEL & REMARKS */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -957,7 +944,6 @@
                         </div>
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
                             <p className="text-sm font-bold">© {CURRENT_YEAR} Right Click Computers.</p>
-                            <button onClick={() => setCurrentView(isAdminAuthenticated ? 'admin' : 'admin-login.</p>
                             <button onClick={() => setCurrentView(isAdminAuthenticated ? 'admin' : 'admin-login')} className="flex items-center gap-2 hover:text-yellow-400 text-sm font-bold bg-white/5 px-4 py-2 rounded-xl border border-white/10"><i className="fas fa-lock"></i> {isAdminAuthenticated ? "Staff Dashboard" : "Staff Login"}</button>
                         </div>
                     </footer>
