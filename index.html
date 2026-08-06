@@ -79,18 +79,18 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BULLETPROOF PARSER WITH EXPLICIT ARRAY INDEXING ---
-        const parseTicketFields = (ticket) => {
-            let rawCustomer = ticket.customer ? String(ticket.customer).trim() : "";
-            let rawMobile = ticket.mobile ? String(ticket.mobile).trim() : "";
-            let rawDevice = ticket.device ? String(ticket.device).trim() : "";
-            let rawIssue = ticket.issue ? String(ticket.issue).trim() : "";
-            let rawRemarks = ticket.remarks ? String(ticket.remarks).trim() : "";
-            let rawStatus = ticket.status ? String(ticket.status).trim() : "Received";
-            let rawDate = ticket.date ? String(ticket.date).trim() : "";
-            let rawCost = ticket.cost ? String(ticket.cost).trim() : "Pending";
+        // --- BULLETPROOF TICKET FIELD PARSER ---
+        const sanitizeTicket = (ticket, id) => {
+            let rawCustomer = ticket && ticket.customer ? String(ticket.customer).trim() : "";
+            let rawMobile = ticket && ticket.mobile ? String(ticket.mobile).trim() : "";
+            let rawDevice = ticket && ticket.device ? String(ticket.device).trim() : "";
+            let rawIssue = ticket && ticket.issue ? String(ticket.issue).trim() : "";
+            let rawRemarks = ticket && ticket.remarks ? String(ticket.remarks).trim() : "";
+            let rawStatus = ticket && ticket.status ? String(ticket.status).trim() : "Received";
+            let rawDate = ticket && ticket.date ? String(ticket.date).trim() : "";
+            let rawCost = ticket && ticket.cost ? String(ticket.cost).trim() : "Pending";
 
-            // If customer string was accidentally concatenated with commas
+            // Parse comma-separated strings safely by explicit index
             if (rawCustomer.includes(",")) {
                 let p = rawCustomer.split(",").map(s => s.trim());
                 if (p.length >= 2) {
@@ -105,13 +105,11 @@
                 }
             }
 
-            // Extract strictly 10-digit mobile number
             let mobileClean = String(rawMobile).replace(/\D/g, '');
             if (mobileClean.length > 10) {
                 mobileClean = mobileClean.slice(-10);
             }
 
-            // Strip any Ticket ID prefix attached to customer name
             let cleanCustomer = rawCustomer.replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
             return {
@@ -123,7 +121,7 @@
                 status: rawStatus || "Received",
                 date: rawDate || "",
                 cost: rawCost || "Pending",
-                deliveredAt: ticket.deliveredAt || null
+                deliveredAt: ticket ? ticket.deliveredAt || null : null
             };
         };
 
@@ -201,7 +199,7 @@
                             if (data && typeof data === 'object' && Object.keys(data).length > 0) {
                                 const sanitized = {};
                                 for (const key in data) {
-                                    sanitized[key] = parseTicketFields(data[key]);
+                                    sanitized[key] = sanitizeTicket(data[key], key);
                                 }
                                 setTicketsData(sanitized);
                             }
@@ -326,7 +324,7 @@
             };
 
             const saveTicketEdit = (id) => {
-                const updatedTicket = parseTicketFields(editFormData);
+                const updatedTicket = sanitizeTicket(editFormData, id);
                 if (updatedTicket.status === 'Delivered' && ticketsData[id].status !== 'Delivered') {
                     updatedTicket.deliveredAt = Date.now();
                 }
