@@ -88,14 +88,14 @@
                 };
             }
 
-            let rawCustomer = ticket.customer ? String(ticket.customer).trim() : "";
-            let rawMobile = ticket.mobile ? String(ticket.mobile).trim() : "";
-            let rawDevice = ticket.device ? String(ticket.device).trim() : "";
-            let rawIssue = ticket.issue ? String(ticket.issue).trim() : "";
-            let rawRemarks = ticket.remarks ? String(ticket.remarks).trim() : "";
-            let rawStatus = ticket.status ? String(ticket.status).trim() : "Received";
-            let rawDate = ticket.date ? String(ticket.date).trim() : "";
-            let rawCost = ticket.cost ? String(ticket.cost).trim() : "Pending";
+            let rawCustomer = ticket.customer !== undefined && ticket.customer !== null ? String(ticket.customer).trim() : "";
+            let rawMobile = ticket.mobile !== undefined && ticket.mobile !== null ? String(ticket.mobile).trim() : "";
+            let rawDevice = ticket.device !== undefined && ticket.device !== null ? String(ticket.device).trim() : "";
+            let rawIssue = ticket.issue !== undefined && ticket.issue !== null ? String(ticket.issue).trim() : "";
+            let rawRemarks = ticket.remarks !== undefined && ticket.remarks !== null ? String(ticket.remarks).trim() : "";
+            let rawStatus = ticket.status !== undefined && ticket.status !== null ? String(ticket.status).trim() : "Received";
+            let rawDate = ticket.date !== undefined && ticket.date !== null ? String(ticket.date).trim() : "";
+            let rawCost = ticket.cost !== undefined && ticket.cost !== null ? String(ticket.cost).trim() : "Pending";
 
             // If rawCustomer was concatenated with commas
             if (rawCustomer.includes(",")) {
@@ -204,18 +204,35 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // --- READ-ONLY INITIAL LOAD FROM GOOGLE SHEETS ---
+            // --- INSTANT DUAL-SYNC INITIAL LOAD ---
             useEffect(() => {
+                // 1. Instant local cache load
+                const localSaved = localStorage.getItem("rightclick_tickets");
+                if (localSaved) {
+                    try {
+                        const parsedLocal = JSON.parse(localSaved);
+                        if (parsedLocal && typeof parsedLocal === 'object' && Object.keys(parsedLocal).length > 0) {
+                            setTicketsData(parsedLocal);
+                        }
+                    } catch(e) {}
+                }
+
+                // 2. Fetch fresh live data from Google Sheets API
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL)
                         .then(res => res.json())
                         .then(data => {
-                            if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                            if (data && typeof data === 'object' && !data.error && Object.keys(data).length > 0) {
                                 const sanitized = {};
                                 for (const key in data) {
-                                    sanitized[key] = parseTicketFields(data[key]);
+                                    if (key && key.toLowerCase() !== "error") {
+                                        sanitized[key] = parseTicketFields(data[key]);
+                                    }
                                 }
-                                setTicketsData(sanitized);
+                                if (Object.keys(sanitized).length > 0) {
+                                    setTicketsData(sanitized);
+                                    localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
+                                }
                             }
                         })
                         .catch(err => {
@@ -226,6 +243,7 @@
 
             const saveDataToCloudOrLocal = (data) => {
                 setTicketsData(data); 
+                localStorage.setItem("rightclick_tickets", JSON.stringify(data));
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL, {
                         method: "POST",
@@ -689,7 +707,7 @@
                             </main>
                         )}
 
-                        {/* ADMIN DASHBOARD VIEW (STRICT COLUMN SEGREGATION) */}
+                        {/* ADMIN DASHBOARD VIEW (BASE CONCEPT UNTOUCHED) */}
                         {currentView === "admin" && isAdminAuthenticated && (
                             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
@@ -913,7 +931,7 @@
                                 {cart.length > 0 && (
                                     <div className="p-8 bg-black border-t border-white/10">
                                         <div className="flex justify-between items-center mb-6"><span className="text-zinc-400 font-bold uppercase">Subtotal</span><span className="text-3xl font-black text-yellow-400">{formatINR(cartTotal)}</span></div>
-                                        <button onClick={() => setIsCheckoutModalOpen(true)} className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-4 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(255,215,0,0.2)]">Secure Checkout</button>
+                                        <button onClick={() => setIsCheckoutModalOpen(true)} className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-4 rounded-2xl font-black text-lg shadow-[0_0_25px_rgba(255,215,0,0.2)]">Secure Checkout</button>
                                     </div>
                                 )}
                             </div>
