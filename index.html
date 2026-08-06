@@ -625,7 +625,7 @@
                             </main>
                         )}
 
-                        {/* ADMIN DASHBOARD VIEW (SORTED BY DATE & SERIAL DESCENDING) */}
+                        {/* ADMIN DASHBOARD VIEW (MATCHES REFERENCE LAYOUT) */}
                         {currentView === "admin" && isAdminAuthenticated && (
                             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
@@ -644,12 +644,12 @@
                                         <table className="w-full text-left border-collapse min-w-[850px]">
                                             <thead>
                                                 <tr className="bg-zinc-100 text-zinc-500 border-b border-zinc-200">
-                                                    <th className="p-5 font-black text-xs uppercase w-[160px]">Ticket ID & Date</th>
-                                                    <th className="p-5 font-black text-xs uppercase w-[180px]">Customer Info</th>
-                                                    <th className="p-5 font-black text-xs uppercase min-w-[220px]">Device & Remarks</th>
-                                                    <th className="p-5 font-black text-xs uppercase w-[140px]">Status</th>
-                                                    <th className="p-5 font-black text-xs uppercase w-[110px]">Cost (₹)</th>
-                                                    <th className="p-5 font-black text-xs uppercase text-right w-[120px]">Actions</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[160px]">TICKET ID & DATE</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[180px]">CUSTOMER INFO</th>
+                                                    <th className="p-5 font-black text-xs uppercase min-w-[220px]">DEVICE & REMARKS</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[140px]">STATUS</th>
+                                                    <th className="p-5 font-black text-xs uppercase w-[110px]">COST (₹)</th>
+                                                    <th className="p-5 font-black text-xs uppercase text-right w-[120px]">ACTIONS</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-zinc-100">
@@ -677,17 +677,17 @@
                                                             
                                                             {/* COL 1: TICKET ID & DATE */}
                                                             <td className="p-5 font-mono font-black text-zinc-900 align-top">
-                                                                {id}
+                                                                <div className="text-base font-black tracking-tight">{id}</div>
                                                                 {isEditing ? (
                                                                     <div className="mt-2">
                                                                         <input type="date" className="w-full p-2 border-2 border-yellow-400 rounded-lg text-xs font-sans focus:outline-none" value={editFormData.date || ""} onChange={(e) => setEditFormData({...editFormData, date: e.target.value})} />
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="text-[10px] text-zinc-500 mt-1 uppercase font-bold tracking-widest">{formatDate(ticket.date)}</div>
+                                                                    <div className="text-[11px] font-bold text-zinc-400 mt-1 uppercase tracking-wider">{formatDate(ticket.date)}</div>
                                                                 )}
                                                             </td>
 
-                                                            {/* COL 2: CUSTOMER INFO & CLICK-TO-DIAL PHONE LINK */}
+                                                            {/* COL 2: CUSTOMER INFO */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -696,11 +696,11 @@
                                                                     </div>
                                                                 ) : (
                                                                     <React.Fragment>
-                                                                        <p className="font-black text-zinc-900">{ticket.customer}</p>
+                                                                        <p className="font-black text-zinc-900 text-sm mb-1">{ticket.customer}</p>
                                                                         {ticket.mobile && (
                                                                             <a 
                                                                                 href={`tel:${cleanMobileDigits}`} 
-                                                                                className="text-xs text-blue-600 font-bold mt-1.5 inline-flex items-center gap-1.5 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"
+                                                                                className="text-xs text-blue-600 font-bold inline-flex items-center gap-1.5 hover:underline"
                                                                                 title="Click to dial customer"
                                                                             >
                                                                                 <i className="fas fa-phone-alt text-[10px]"></i> 
@@ -720,8 +720,8 @@
                                                                     </div>
                                                                 ) : (
                                                                     <React.Fragment>
-                                                                        <p className="font-bold text-zinc-900 mb-1">{ticket.device}</p>
-                                                                        {ticket.remarks && <p className="text-xs text-zinc-500 font-medium italic mt-1 line-clamp-2" title={ticket.remarks}>"{ticket.remarks}"</p>}
+                                                                        <p className="font-bold text-zinc-900 text-sm mb-1 leading-snug">{ticket.device}</p>
+                                                                        {ticket.remarks && <p className="text-xs text-zinc-500 font-medium italic leading-relaxed line-clamp-2" title={ticket.remarks}>"{ticket.remarks}"</p>}
                                                                     </React.Fragment>
                                                                 )}
                                                             </td>
@@ -729,7 +729,7 @@
                                                             {/* COL 4: STATUS */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
-                                                                    <select className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}>
+                                                                    <select className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold text-xs" value={editFormData.status} onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}>
                                                                         <option value="Received">Received</option>
                                                                         <option value="Diagnosing">Diagnosing</option>
                                                                         <option value="Repairing">Repairing</option>
@@ -737,23 +737,23 @@
                                                                         <option value="Delivered">Delivered</option>
                                                                     </select>
                                                                 ) : (
-                                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-black whitespace-nowrap ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-700' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
+                                                                    <span className={`px-3.5 py-1.5 rounded-full text-xs font-black inline-block whitespace-nowrap ${ticket.status === 'Ready for Pickup' ? 'bg-green-100 text-green-700' : ticket.status === 'Repairing' ? 'bg-yellow-100 text-yellow-800' : ticket.status === 'Diagnosing' ? 'bg-blue-100 text-blue-700' : ticket.status === 'Delivered' ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-700'}`}>{ticket.status}</span>
                                                                 )}
                                                             </td>
 
                                                             {/* COL 5: COST */}
                                                             <td className="p-5 align-top">
-                                                                {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
+                                                                {isEditing ? <input type="text" className="w-full p-2 border-2 border-yellow-400 rounded-xl font-bold text-xs" value={editFormData.cost} onChange={(e) => setEditFormData({...editFormData, cost: e.target.value})} /> : <span className="font-black text-sm">{ticket.cost === 'Pending' ? 'Pending' : formatINR(ticket.cost)}</span>}
                                                             </td>
                                                             
                                                             {/* COL 6: ACTIONS */}
                                                             <td className="p-5 text-right align-top">
                                                                 {isEditing ? (
-                                                                    <button onClick={() => saveTicketEdit(id)} className="w-full mb-2 bg-zinc-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors"><i className="fas fa-save"></i> Save</button>
+                                                                    <button onClick={() => saveTicketEdit(id)} className="w-full mb-2 bg-zinc-950 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-zinc-800 transition-colors shadow-sm"><i className="fas fa-save"></i> Save</button>
                                                                 ) : (
                                                                     <div className="flex flex-col gap-2 items-end">
-                                                                        <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="w-full bg-zinc-100 text-zinc-700 px-5 py-2 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors"><i className="fas fa-edit"></i> Edit</button>
-                                                                        <button onClick={() => sendCustomerNotification(ticket, id)} className="w-full bg-[#25d366] text-white px-5 py-2 rounded-xl font-bold text-sm hover:bg-[#20bd5a] transition-colors"><i className="fab fa-whatsapp"></i> Notify</button>
+                                                                        <button onClick={() => { setEditingTicketId(id); setEditFormData(ticket); }} className="w-full bg-zinc-100 text-zinc-700 px-4 py-1.5 rounded-xl font-bold text-xs hover:bg-zinc-200 border border-zinc-200 transition-colors flex items-center justify-center gap-1.5"><i className="fas fa-edit"></i> Edit</button>
+                                                                        <button onClick={() => sendCustomerNotification(ticket, id)} className="w-full bg-[#25d366] text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-[#20bd5a] shadow-sm transition-colors flex items-center justify-center gap-1.5"><i className="fab fa-whatsapp text-sm"></i> Notify</button>
                                                                     </div>
                                                                 )}
                                                             </td>
