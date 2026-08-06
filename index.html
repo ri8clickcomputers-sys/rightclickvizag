@@ -79,7 +79,7 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BUG-FREE PARSER WITH EXPLICIT INDEXES ---
+        // --- SAFE TICKET PARSER WITH EXPLICIT ARRAY INDEXING ---
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
                 return {
@@ -957,6 +957,7 @@
                         </div>
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
                             <p className="text-sm font-bold">© {CURRENT_YEAR} Right Click Computers.</p>
+                            <button onClick={() => setCurrentView(isAdminAuthenticated ? 'admin' : 'admin-login.</p>
                             <button onClick={() => setCurrentView(isAdminAuthenticated ? 'admin' : 'admin-login')} className="flex items-center gap-2 hover:text-yellow-400 text-sm font-bold bg-white/5 px-4 py-2 rounded-xl border border-white/10"><i className="fas fa-lock"></i> {isAdminAuthenticated ? "Staff Dashboard" : "Staff Login"}</button>
                         </div>
                     </footer>
