@@ -79,6 +79,67 @@
             return `${year}-${month}-${day}`;
         };
 
+        // --- BULLETPROOF TICKET FIELD PARSER ---
+        const parseTicketFields = (ticket) => {
+            let customer = "";
+            let mobile = "";
+            let device = "";
+            let issue = "";
+            let remarks = "";
+            let status = "Received";
+            let date = "";
+            let cost = "Pending";
+
+            let sourceStr = "";
+            if (typeof ticket.customer === "string" && ticket.customer.includes(",")) {
+                sourceStr = ticket.customer;
+            } else if (typeof ticket.mobile === "string" && ticket.mobile.includes(",")) {
+                sourceStr = ticket.mobile;
+            } else if (typeof ticket.device === "string" && ticket.device.includes(",")) {
+                sourceStr = ticket.device;
+            }
+
+            if (sourceStr) {
+                let parts = sourceStr.split(",").map(s => s.trim());
+                customer = parts || parts[0];
+                mobile = parts || "";
+                device = parts || "";
+                issue = parts || "";
+                remarks = parts || "";
+                status = parts || "Received";
+                date = parts || "";
+                cost = parts || "Pending";
+            } else {
+                customer = ticket.customer || "";
+                mobile = ticket.mobile || "";
+                device = ticket.device || "";
+                issue = ticket.issue || "";
+                remarks = ticket.remarks || "";
+                status = ticket.status || "Received";
+                date = ticket.date || "";
+                cost = ticket.cost || "Pending";
+            }
+
+            let mobileDigits = String(mobile).replace(/\D/g, '');
+            if (mobileDigits.length > 10) {
+                mobileDigits = mobileDigits.slice(-10);
+            }
+
+            customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+
+            return {
+                customer: customer || "Customer Name",
+                mobile: mobileDigits || mobile,
+                device: device || "Device Model",
+                issue: issue || "",
+                remarks: remarks || "",
+                status: status || "Received",
+                date: date || "",
+                cost: cost || "Pending",
+                deliveredAt: ticket.deliveredAt || null
+            };
+        };
+
         const BrandLogo = () => (
             <div className="flex items-center gap-3 cursor-pointer">
                 <div className="relative w-10 h-10 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">
@@ -151,7 +212,11 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-                                setTicketsData(data);
+                                const sanitized = {};
+                                for (const key in data) {
+                                    sanitized[key] = parseTicketFields(data[key]);
+                                }
+                                setTicketsData(sanitized);
                             }
                         })
                         .catch(err => {
@@ -255,11 +320,11 @@
                 if (ticketsData[customId]) { showToast("Error: Ticket ID exists!"); return; }
 
                 const newTicket = {
-                    customer: newTicketForm.customer, 
+                    customer: newTicketForm.customer.trim(), 
                     mobile: newTicketForm.mobile.replace(/\D/g, ''),
-                    device: newTicketForm.device, 
-                    issue: newTicketForm.issue, 
-                    remarks: newTicketForm.remarks,
+                    device: newTicketForm.device.trim(), 
+                    issue: newTicketForm.issue.trim(), 
+                    remarks: newTicketForm.remarks.trim(),
                     status: "Received", 
                     date: newTicketForm.date, 
                     cost: newTicketForm.cost || "Pending"
@@ -274,7 +339,7 @@
             };
 
             const saveTicketEdit = (id) => {
-                const updatedTicket = { ...editFormData };
+                const updatedTicket = parseTicketFields(editFormData);
                 if (updatedTicket.status === 'Delivered' && ticketsData[id].status !== 'Delivered') {
                     updatedTicket.deliveredAt = Date.now();
                 }
@@ -495,7 +560,7 @@
                                         const cleanSerialInput = trackingSerial.trim().toUpperCase();
                                         const cleanMobileInput = trackingMobile.trim().replace(/\D/g, '');
 
-                                        // FLEXIBLE MATCHING FOR TICKET ID (Matches "01", "RC2026-01", "489", "RC2026-489")
+                                        // FLEXIBLE MATCHING FOR TICKET ID (Matches "01", "RC2026-01", "798", "RC2026-798")
                                         const matchedKey = Object.keys(ticketsData).find(idKey => {
                                             const idUpper = idKey.toUpperCase();
                                             return idUpper === cleanSerialInput || 
@@ -528,7 +593,7 @@
                                         <div className="flex flex-col sm:flex-row gap-4">
                                             <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
                                                 <div className="bg-zinc-100 text-zinc-500 font-black text-lg px-6 flex items-center border-r border-zinc-200 select-none" title="Ticket Year">{PREFIX}-</div>
-                                                <input type="text" placeholder="Ticket Serial (e.g. 01 or 489)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 uppercase text-lg" required />
+                                                <input type="text" placeholder="Ticket Serial (e.g. 798 or 01)" value={trackingSerial} onChange={(e) => setTrackingSerial(e.target.value)} className="w-full px-4 py-4 bg-white focus:outline-none font-black text-zinc-900 uppercase text-lg" required />
                                             </div>
                                             <div className="flex flex-1 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-yellow-400 bg-white">
                                                 <div className="bg-zinc-100 text-zinc-500 px-6 flex items-center border-r border-zinc-200" title="Security Verification"><i className="fas fa-mobile-alt text-lg"></i></div>
@@ -625,7 +690,7 @@
                             </main>
                         )}
 
-                        {/* ADMIN DASHBOARD VIEW (MATCHES REFERENCE LAYOUT) */}
+                        {/* ADMIN DASHBOARD VIEW (STRICT COLUMN SEGREGATION) */}
                         {currentView === "admin" && isAdminAuthenticated && (
                             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[70vh] animate-slide-in-right">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/5 p-8 rounded-[30px] border border-white/10 backdrop-blur-md">
@@ -675,7 +740,7 @@
                                                     return (
                                                         <tr key={id} className={ticket.status === 'Delivered' ? 'bg-zinc-50/50' : 'hover:bg-zinc-50'}>
                                                             
-                                                            {/* COL 1: TICKET ID & DATE */}
+                                                            {/* COL 1: TICKET ID & DATE ONLY */}
                                                             <td className="p-5 font-mono font-black text-zinc-900 align-top">
                                                                 <div className="text-base font-black tracking-tight">{id}</div>
                                                                 {isEditing ? (
@@ -687,7 +752,7 @@
                                                                 )}
                                                             </td>
 
-                                                            {/* COL 2: CUSTOMER INFO */}
+                                                            {/* COL 2: CUSTOMER NAME & CLICK-TO-DIAL MOBILE LINK ONLY */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -700,7 +765,7 @@
                                                                         {ticket.mobile && (
                                                                             <a 
                                                                                 href={`tel:${cleanMobileDigits}`} 
-                                                                                className="text-xs text-blue-600 font-bold inline-flex items-center gap-1.5 hover:underline"
+                                                                                className="text-xs text-blue-600 font-bold inline-flex items-center gap-1.5 hover:underline bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100"
                                                                                 title="Click to dial customer"
                                                                             >
                                                                                 <i className="fas fa-phone-alt text-[10px]"></i> 
@@ -711,7 +776,7 @@
                                                                 )}
                                                             </td>
                                                             
-                                                            {/* COL 3: DEVICE & REMARKS */}
+                                                            {/* COL 3: DEVICE MODEL & REMARKS ONLY */}
                                                             <td className="p-5 align-top">
                                                                 {isEditing ? (
                                                                     <div className="flex flex-col gap-2">
@@ -782,7 +847,7 @@
                                                             <label className="block text-xs font-bold text-zinc-500 mb-2 uppercase tracking-widest">Serial Number</label>
                                                             <div className="flex shadow-sm rounded-2xl overflow-hidden border border-zinc-200 focus-within:border-yellow-400 focus-within:ring-2 ring-yellow-400/20">
                                                                 <div className="bg-zinc-100 text-zinc-500 font-black text-sm px-4 py-4 flex items-center border-r border-zinc-200">{PREFIX}-</div>
-                                                                <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-3 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="01 or 490"/>
+                                                                <input type="text" required value={newTicketForm.serialNumber} onChange={e => setNewTicketForm({...newTicketForm, serialNumber: e.target.value})} className="w-full px-3 py-4 focus:outline-none font-black text-zinc-900 uppercase" placeholder="799 or 02"/>
                                                             </div>
                                                         </div>
                                                         <div>
@@ -883,7 +948,6 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.renderactivated = true;
         root.render(<App />);
     </script>
 </body>
