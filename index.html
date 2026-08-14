@@ -6,7 +6,7 @@
     <title>Right Click Computers | Premium Sales & Service</title>
     
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Tailwind CSS -->
@@ -23,13 +23,10 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .animate-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-in-right { animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-        
-        @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .animate-scroll-left { animation: scrollLeft 20s linear infinite; }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
         
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
@@ -60,7 +57,17 @@
             { id: 8, name: "Portronics Toad 27 Wireless Mouse", category: "Accessories", price: 322, image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", rating: 4.2, reviews: 512 }
         ];
 
+        const SERVICES = [
+            { title: "Chip-Level Laptop & Motherboard Repair", desc: "Expert micro-soldering, short-circuit troubleshooting, and power IC replacement.", icon: "fa-microchip" },
+            { title: "MacBook Specialist Services", desc: "Logic board repairs, battery replacements, and display assembly for Apple MacBooks.", icon: "fa-apple-whole" },
+            { title: "Custom Gaming PC Assemblies", desc: "Tailored liquid-cooled gaming rigs, workstation builds, and component optimization.", icon: "fa-gamepad" },
+            { title: "Refurbished Business Laptops", desc: "Enterprise-grade Dell, HP, and Lenovo laptops with rigorous multi-point testing.", icon: "fa-laptop" },
+            { title: "Data Recovery Services", desc: "Advanced data extraction from failed hard drives, corrupted SSDs, and dead storage devices.", icon: "fa-database" },
+            { title: "CCTV & Security Solutions", desc: "High-definition commercial and residential surveillance installations and maintenance.", icon: "fa-video" }
+        ];
+
         const CATEGORIES = ["All", "Components", "Accessories", "Displays", "Desktops"];
+        const STATUS_OPTIONS = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
         const CURRENT_YEAR = new Date().getFullYear();
         const PREFIX = `RC${CURRENT_YEAR}`;
 
@@ -79,62 +86,72 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BUG-FREE PARSER WITH EXPLICIT INDEXES ---
+        // --- BULLETPROOF DATA SANITIZER ---
         const parseTicketFields = (ticket) => {
-            if (!ticket || typeof ticket !== 'object') {
+            if (!ticket) {
                 return {
                     customer: "Customer Name", mobile: "", device: "Device Model",
                     issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null
                 };
             }
 
-            let rawCustomer = ticket.customer ? String(ticket.customer).trim() : "";
-            let rawMobile = ticket.mobile ? String(ticket.mobile).trim() : "";
-            let rawDevice = ticket.device ? String(ticket.device).trim() : "";
-            let rawIssue = ticket.issue ? String(ticket.issue).trim() : "";
-            let rawRemarks = ticket.remarks ? String(ticket.remarks).trim() : "";
-            let rawStatus = ticket.status ? String(ticket.status).trim() : "Received";
-            let rawDate = ticket.date ? String(ticket.date).trim() : "";
-            let rawCost = ticket.cost ? String(ticket.cost).trim() : "Pending";
+            // Handle accidental array-wrapped rows
+            if (Array.isArray(ticket)) {
+                return {
+                    customer: String(ticket || "Customer Name"),
+                    mobile: String(ticket || "").replace(/\D/g, '').slice(-10),
+                    device: String(ticket[3] || "Device Model"),
+                    issue: String(ticket[4] || ""),
+                    remarks: String(ticket[5] || ""),
+                    status: String(ticket[6] || "Received"),
+                    date: String(ticket[7] || ""),
+                    cost: String(ticket[8] || "Pending"),
+                    deliveredAt: ticket[9] || null
+                };
+            }
 
-            // If rawCustomer was concatenated with commas
+            let rawCustomer = ticket.customer !== undefined && ticket.customer !== null ? (typeof ticket.customer === 'object' ? '' : String(ticket.customer).trim()) : "";
+            let rawMobile = ticket.mobile !== undefined && ticket.mobile !== null ? (typeof ticket.mobile === 'object' ? '' : String(ticket.mobile).trim()) : "";
+            let rawDevice = ticket.device !== undefined && ticket.device !== null ? (typeof ticket.device === 'object' ? '' : String(ticket.device).trim()) : "";
+            let rawIssue = ticket.issue !== undefined && ticket.issue !== null ? (typeof ticket.issue === 'object' ? '' : String(ticket.issue).trim()) : "";
+            let rawRemarks = ticket.remarks !== undefined && ticket.remarks !== null ? (typeof ticket.remarks === 'object' ? '' : String(ticket.remarks).trim()) : "";
+            let rawStatus = ticket.status !== undefined && ticket.status !== null ? (typeof ticket.status === 'object' ? 'Received' : String(ticket.status).trim()) : "Received";
+            let rawDate = ticket.date !== undefined && ticket.date !== null ? (typeof ticket.date === 'object' ? '' : String(ticket.date).trim()) : "";
+            let rawCost = ticket.cost !== undefined && ticket.cost !== null ? (typeof ticket.cost === 'object' ? 'Pending' : String(ticket.cost).trim()) : "Pending";
+
+            // If legacy comma-concatenated string is detected, unpack safely
             if (rawCustomer.includes(",")) {
                 let items = rawCustomer.split(",").map(s => String(s).trim());
                 if (items.length >= 2) {
                     rawCustomer = items || items[0] || "";
                     if (items) rawMobile = items;
-                    if (items) rawDevice = items;
-                    if (items) rawIssue = items;
-                    if (items) rawRemarks = items;
-                    if (items) rawStatus = items;
-                    if (items) rawDate = items;
-                    if (items) rawCost = items;
+                    if (items[3]) rawDevice = items[3];
+                    if (items[4]) rawIssue = items[4];
+                    if (items[5]) rawRemarks = items[5];
+                    if (items[6]) rawStatus = items[6];
+                    if (items[7]) rawDate = items[7];
+                    if (items[8]) rawCost = items[8];
                 }
             }
 
-            rawCustomer = String(rawCustomer);
-            rawMobile = String(rawMobile);
-            rawDevice = String(rawDevice);
-            rawRemarks = String(rawRemarks);
-
             // Extract clean 10-digit mobile number
-            let mobileClean = rawMobile.replace(/\D/g, '');
+            let mobileClean = String(rawMobile).replace(/\D/g, '');
             if (mobileClean.length > 10) {
                 mobileClean = mobileClean.slice(-10);
             }
 
-            // Strip Ticket ID prefix from customer name
-            let cleanCustomer = rawCustomer.replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+            // Strip accidental TicketID prefixes from customer names
+            let cleanCustomer = String(rawCustomer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
             return {
                 customer: cleanCustomer || "Customer Name",
-                mobile: mobileClean || rawMobile,
-                device: rawDevice || "Device Model",
-                issue: rawIssue || "",
-                remarks: rawRemarks || "",
-                status: rawStatus || "Received",
-                date: rawDate || "",
-                cost: rawCost || "Pending",
+                mobile: mobileClean || String(rawMobile),
+                device: String(rawDevice) || "Device Model",
+                issue: String(rawIssue) || "",
+                remarks: String(rawRemarks) || "",
+                status: String(rawStatus) || "Received",
+                date: String(rawDate) || "",
+                cost: String(rawCost) || "Pending",
                 deliveredAt: ticket.deliveredAt || null
             };
         };
@@ -163,17 +180,21 @@
         function App() {
             const [currentView, setCurrentView] = useState("store");
             const [toastMessage, setToastMessage] = useState("");
+            const [isLoadingCloud, setIsLoadingCloud] = useState(false);
             
             const formatDate = (dateStr) => {
                 if (!dateStr) return "";
-                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                    const [y, m, d] = dateStr.split('-');
-                    const dateObj = new Date(y, m - 1, d);
-                    return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const str = String(dateStr).trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                    const [y, m, d] = str.split('-');
+                    const dateObj = new Date(Number(y), Number(m) - 1, Number(d));
+                    if (!isNaN(dateObj.getTime())) {
+                        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    }
                 }
-                const d = new Date(dateStr);
-                if (!isNaN(d)) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                return dateStr;
+                const d = new Date(str);
+                if (!isNaN(d.getTime())) return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return str;
             };
 
             const [cart, setCart] = useState([]);
@@ -182,15 +203,19 @@
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
             
-            const [trackingSerial, setTrackingSerial] = useState("");
-            const [trackingMobile, setTrackingMobile] = useState(""); 
+            // Tracking State
+            const [trackingQuery, setTrackingQuery] = useState("");
             const [searchedTicket, setSearchedTicket] = useState(null);
+            const [searchedTicketId, setSearchedTicketId] = useState("");
             const [trackingError, setTrackingError] = useState("");
             
+            // Admin State
             const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
             const [loginUsername, setLoginUsername] = useState("");
             const [loginPassword, setLoginPassword] = useState("");
             const [loginError, setLoginError] = useState("");
+            const [adminSearch, setAdminSearch] = useState("");
+            const [adminStatusFilter, setAdminStatusFilter] = useState("All");
 
             const [ticketsData, setTicketsData] = useState({});
             const [editingTicketId, setEditingTicketId] = useState(null);
@@ -204,39 +229,52 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // --- READ-ONLY INITIAL LOAD FROM GOOGLE SHEETS ---
+            // Cloud Fetch Helper
+            const fetchCloudData = () => {
+                if (!GOOGLE_SHEETS_API_URL) return;
+                setIsLoadingCloud(true);
+                fetch(GOOGLE_SHEETS_API_URL)
+                    .then(res => res.json())
+                    .then(data => {
+                        setIsLoadingCloud(false);
+                        if (data && typeof data === 'object' && !data.error && Object.keys(data).length > 0) {
+                            const sanitized = {};
+                            for (const key in data) {
+                                if (key && key.toLowerCase() !== "error") {
+                                    sanitized[key] = parseTicketFields(data[key]);
+                                }
+                            }
+                            if (Object.keys(sanitized).length > 0) {
+                                setTicketsData(sanitized);
+                                localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
+                                showToast("Data synchronized with Google Sheet");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        setIsLoadingCloud(false);
+                        console.error("Failed to connect to Google Sheets backend:", err);
+                    });
+            };
+
+            // --- INSTANT DUAL-SYNC INITIAL LOAD ---
             useEffect(() => {
                 const localSaved = localStorage.getItem("rightclick_tickets");
                 if (localSaved) {
                     try {
                         const parsedLocal = JSON.parse(localSaved);
-                        if (parsedLocal && typeof parsedLocal === 'object' && Object.keys(parsedLocal).length > 0) {
-                            setTicketsData(parsedLocal);
-                        }
-                    } catch(e) {}
-                }
-
-                if (GOOGLE_SHEETS_API_URL) {
-                    fetch(GOOGLE_SHEETS_API_URL)
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data && typeof data === 'object' && !data.error && Object.keys(data).length > 0) {
-                                const sanitized = {};
-                                for (const key in data) {
-                                    if (key && key.toLowerCase() !== "error") {
-                                        sanitized[key] = parseTicketFields(data[key]);
-                                    }
-                                }
-                                if (Object.keys(sanitized).length > 0) {
-                                    setTicketsData(sanitized);
-                                    localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
-                                }
+                        if (parsedLocal && typeof parsedLocal === 'object') {
+                            const sanitizedLocal = {};
+                            for (const k in parsedLocal) {
+                                sanitizedLocal[k] = parseTicketFields(parsedLocal[k]);
                             }
-                        })
-                        .catch(err => {
-                            console.error("Failed to connect to Google Sheets:", err);
-                        });
+                            setTicketsData(sanitizedLocal);
+                        }
+                    } catch(e) {
+                        localStorage.removeItem("rightclick_tickets");
+                    }
                 }
+                fetchCloudData();
             }, []);
 
             const saveDataToCloudOrLocal = (data) => {
@@ -251,7 +289,7 @@
                 }
             };
 
-            // --- AUTO DELETE CLEANUP ---
+            // --- AUTO CLEANUP (DELIVERED TICKETS AFTER 3 DAYS) ---
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -308,15 +346,18 @@
 
             const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const formatINR = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+            const formatINR = (amount) => {
+                const numeric = Number(String(amount).replace(/[^0-9.-]+/g, ""));
+                if (isNaN(numeric) || numeric === 0) return String(amount);
+                return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(numeric);
+            };
 
             const handleAdminLogin = (e) => {
                 e.preventDefault();
-                if (loginUsername.toLowerCase() === 'rightclick' && loginPassword === '9059895427') {
+                if (loginUsername.toLowerCase().trim() === 'rightclick' && loginPassword.trim() === '9059895427') {
                     setIsAdminAuthenticated(true);
-                    setCurrentView('admin');
                     setLoginError(''); setLoginUsername(''); setLoginPassword('');
-                    showToast("Secure Login Successful");
+                    showToast("Staff Access Granted");
                 } else {
                     setLoginError("Invalid username or password.");
                 }
@@ -330,19 +371,24 @@
 
             const handleCreateTicket = (e) => {
                 e.preventDefault();
-                const customId = `${PREFIX}-${newTicketForm.serialNumber.trim()}`.toUpperCase();
+                const cleanSerial = newTicketForm.serialNumber.trim().toUpperCase().replace(/^RC\d*-?/, '');
+                const customId = `${PREFIX}-${cleanSerial}`;
                 
-                if (ticketsData[customId]) { showToast("Error: Ticket ID exists!"); return; }
+                if (ticketsData[customId]) { 
+                    showToast("Error: Ticket ID already exists!"); 
+                    return; 
+                }
 
                 const newTicket = {
                     customer: newTicketForm.customer.trim(), 
                     mobile: newTicketForm.mobile.replace(/\D/g, ''),
                     device: newTicketForm.device.trim(), 
                     issue: newTicketForm.issue.trim(), 
-                    remarks: newTicketForm.remarks.trim(),
+                    remarks: newTicketForm.remarks.trim(), 
                     status: "Received", 
-                    date: newTicketForm.date, 
-                    cost: newTicketForm.cost || "Pending"
+                    date: newTicketForm.date || getTodayYYYYMMDD(), 
+                    cost: newTicketForm.cost ? newTicketForm.cost.trim() : "Pending",
+                    deliveredAt: null
                 };
 
                 const updatedData = { ...ticketsData, [customId]: newTicket };
@@ -353,15 +399,22 @@
                 showToast(`Created: ${customId}`);
             };
 
+            const startEditingTicket = (id, ticket) => {
+                setEditingTicketId(id);
+                setEditFormData({ ...ticket });
+            };
+
             const saveTicketEdit = (id) => {
                 const updatedTicket = parseTicketFields(editFormData);
-                if (updatedTicket.status === 'Delivered' && ticketsData[id].status !== 'Delivered') {
+                if (updatedTicket.status === 'Delivered' && ticketsData[id]?.status !== 'Delivered') {
                     updatedTicket.deliveredAt = Date.now();
+                } else if (updatedTicket.status !== 'Delivered') {
+                    updatedTicket.deliveredAt = null;
                 }
                 const updatedData = { ...ticketsData, [id]: updatedTicket };
                 saveDataToCloudOrLocal(updatedData);
                 setEditingTicketId(null);
-                showToast(`Updated ${id}`);
+                showToast(`Saved updates for ${id}`);
             };
 
             // --- SANITIZED WHATSAPP NOTIFICATION ---
@@ -392,18 +445,102 @@
             };
 
             const processCheckout = () => {
-                let orderText = `Hello Right Click Computers! I would like to securely place an order:%0A%0A`;
+                let orderText = `Hello Right Click Computers! I would like to place an order:%0A%0A`;
                 cart.forEach(item => { orderText += `▪ ${item.quantity}x ${item.name} (${formatINR(item.price * item.quantity)})%0A`; });
-                orderText += `%0A*Total Value: ${formatINR(cartTotal)}*%0A%0AHow should I proceed with the payment?`;
+                orderText += `%0A*Total Value: ${formatINR(cartTotal)}*%0A%0AHow should I proceed with payment and pickup?`;
                 window.open(`https://wa.me/919059895427?text=${orderText}`, '_blank');
                 setIsCheckoutModalOpen(false);
                 setCart([]); 
                 showToast("Opening WhatsApp...");
             };
 
-            return (
-                <div className="min-h-screen flex flex-col relative">
+            // Repair Tracker Lookup Handler
+            const handleTrackLookup = (e) => {
+                e.preventDefault();
+                setTrackingError("");
+                setSearchedTicket(null);
+                setSearchedTicketId("");
+
+                const query = trackingQuery.trim();
+                if (!query) {
+                    setTrackingError("Please enter your Ticket ID or 10-digit mobile number.");
+                    return;
+                }
+
+                const cleanDigits = query.replace(/\D/g, '');
+                const upperQuery = query.toUpperCase();
+
+                let foundId = null;
+                for (const key in ticketsData) {
+                    const t = ticketsData[key];
+                    const mobileClean = String(t.mobile || '').replace(/\D/g, '');
+                    if (key.toUpperCase() === upperQuery || key.toUpperCase() === `${PREFIX}-${upperQuery}`) {
+                        foundId = key;
+                        break;
+                    }
+                    if (cleanDigits.length >= 10 && (mobileClean === cleanDigits || mobileClean.endsWith(cleanDigits))) {
+                        foundId = key;
+                        break;
+                    }
+                }
+
+                if (foundId) {
+                    setSearchedTicket(ticketsData[foundId]);
+                    setSearchedTicketId(foundId);
+                } else {
+                    setTrackingError(`No repair record found for "${query}". Please check your details.`);
+                }
+            };
+
+            // Safe Sorted Tickets for Admin Dashboard
+            const sortedTicketsList = useMemo(() => {
+                const entries = Object.entries(ticketsData || {}).map(([id, t]) => ({ id, ...t }));
+                
+                const filtered = entries.filter(item => {
+                    const matchStatus = adminStatusFilter === "All" || item.status === adminStatusFilter;
+                    const q = (adminSearch || "").toLowerCase();
+                    const matchQuery = !q || 
+                        String(item.id || '').toLowerCase().includes(q) || 
+                        String(item.customer || '').toLowerCase().includes(q) || 
+                        String(item.mobile || '').includes(q) || 
+                        String(item.device || '').toLowerCase().includes(q) ||
+                        String(item.issue || '').toLowerCase().includes(q) ||
+                        String(item.remarks || '').toLowerCase().includes(q);
+                    return matchStatus && matchQuery;
+                });
+
+                return filtered.sort((a, b) => {
+                    const dateA = new Date(a.date || 0).getTime();
+                    const dateB = new Date(b.date || 0).getTime();
+                    if (dateB !== dateA) return dateB - dateA;
                     
+                    const numA = parseInt(String(a.id || '').replace(/\D/g, '') || '0', 10);
+                    const numB = parseInt(String(b.id || '').replace(/\D/g, '') || '0', 10);
+                    return numB - numA;
+                });
+            }, [ticketsData, adminSearch, adminStatusFilter]);
+
+            const getStatusBadge = (status) => {
+                switch(status) {
+                    case 'Received':
+                        return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                    case 'Diagnosing':
+                        return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                    case 'Repairing':
+                        return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
+                    case 'Ready for Pickup':
+                        return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse';
+                    case 'Delivered':
+                        return 'bg-zinc-700/40 text-zinc-400 border border-zinc-600/30';
+                    default:
+                        return 'bg-zinc-800 text-zinc-300 border border-zinc-700';
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative bg-[#03050d] text-white">
+                    
+                    {/* Toast Notification */}
                     {toastMessage && (
                         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-zinc-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-bounce border border-yellow-500/50">
                             <i className="fas fa-check-circle text-yellow-400"></i>
@@ -411,40 +548,52 @@
                         </div>
                     )}
 
+                    {/* Floating Quick Action Buttons */}
                     <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
-                        <button onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} className="w-14 h-14 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform animate-pulse-slow">
+                        <button 
+                            onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} 
+                            className="w-14 h-14 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform animate-pulse-slow"
+                            title="Write a Google Review"
+                        >
                             <i className="fas fa-star text-2xl"></i>
                         </button>
-                        <a href="https://wa.me/919059895427" target="_blank" className="w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform">
+                        <a 
+                            href="https://wa.me/919059895427" 
+                            target="_blank" 
+                            className="w-14 h-14 bg-[#25d366] text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform"
+                            title="WhatsApp Store Direct"
+                        >
                             <i className="fab fa-whatsapp text-3xl"></i>
                         </a>
                     </div>
 
+                    {/* Review Assistant Modal */}
                     {isReviewAssistOpen && (
                         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsReviewAssistOpen(false)}></div>
-                            <div className="bg-zinc-900/90 border border-yellow-400/30 backdrop-blur-xl p-8 rounded-3xl w-full max-w-lg relative z-10 animate-slide-in-right">
+                            <div className="bg-zinc-900/95 border border-yellow-400/30 backdrop-blur-xl p-8 rounded-3xl w-full max-w-lg relative z-10 animate-slide-in-right shadow-2xl">
                                 <button onClick={() => setIsReviewAssistOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white"><i className="fas fa-times"></i></button>
                                 <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2"><i className="fas fa-star text-yellow-400"></i> Review Assistant</h2>
-                                <p className="text-zinc-400 mb-6 text-sm">Help us grow by leaving a quick 5-star review!</p>
+                                <p className="text-zinc-400 mb-6 text-sm">Help us grow by leaving a quick 5-star Google review!</p>
                                 <textarea readOnly value={generatedReview} className="w-full h-32 bg-black/50 border border-yellow-400/20 rounded-xl p-4 text-white font-medium resize-none focus:outline-none focus:border-yellow-400 transition-colors mb-4"/>
                                 <div className="flex gap-3">
-                                    <button onClick={() => { navigator.clipboard.writeText(generatedReview); showToast("Copied!"); }} className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2"><i className="fas fa-copy"></i> Copy Review</button>
+                                    <button onClick={() => { navigator.clipboard.writeText(generatedReview); showToast("Copied to clipboard!"); }} className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2"><i className="fas fa-copy"></i> Copy Review</button>
                                     <a href="https://g.page/r/CZ6XNQ1f9WZNEBM/review" target="_blank" className="flex-1 bg-white hover:bg-zinc-200 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 text-center">Write on Google</a>
                                 </div>
                             </div>
                         </div>
                     )}
 
+                    {/* Secure Checkout Modal */}
                     {isCheckoutModalOpen && (
                         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCheckoutModalOpen(false)}></div>
-                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-[30px] w-full max-w-md relative z-10 animate-slide-in-right">
+                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-[30px] w-full max-w-md relative z-10 animate-slide-in-right shadow-2xl">
                                 <button onClick={() => setIsCheckoutModalOpen(false)} className="absolute top-5 right-5 text-zinc-400 hover:text-white bg-white/5 p-2 rounded-full"><i className="fas fa-times"></i></button>
                                 <div className="text-center mb-6 mt-2">
                                     <div className="w-20 h-20 bg-yellow-400/10 text-yellow-400 rounded-full flex items-center justify-center mx-auto mb-5 border border-yellow-400/20"><i className="fas fa-shield-alt text-4xl"></i></div>
                                     <h2 className="text-3xl font-black text-white mb-3">Secure Checkout</h2>
-                                    <p className="text-zinc-400 text-sm leading-relaxed">To guarantee your financial security, <strong className="text-white">we never ask for card details on our website.</strong> Please confirm your order directly with our team via WhatsApp to proceed with payment safely.</p>
+                                    <p className="text-zinc-400 text-sm leading-relaxed">To guarantee financial safety, <strong className="text-white">we do not collect card details online.</strong> Complete and confirm your order directly with our team via WhatsApp.</p>
                                 </div>
                                 <div className="bg-black/50 rounded-2xl p-5 mb-6 border border-white/5 shadow-inner">
                                     <div className="flex justify-between text-sm mb-2 text-zinc-400 font-bold"><span>Total Items:</span> <span className="text-white">{cartCount}</span></div>
@@ -457,12 +606,14 @@
                         </div>
                     )}
 
+                    {/* Navigation Bar */}
                     <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
                             <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
                             <div className="hidden md:flex items-center space-x-8">
                                 <button onClick={() => setCurrentView("store")} className={`font-bold transition-colors ${currentView === 'store' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Store</button>
                                 <button onClick={() => setCurrentView("tracking")} className={`font-bold transition-colors ${currentView === 'tracking' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Repair Tracking</button>
+                                <button onClick={() => setCurrentView("admin")} className={`font-bold transition-colors ${currentView === 'admin' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Staff Portal</button>
                                 <a href="tel:+919059895427" className="text-yellow-400 font-bold tracking-wider hover:text-yellow-300">CALL EXPERT</a>
                             </div>
                             <div className="flex items-center gap-4">
@@ -475,25 +626,728 @@
                         </div>
                     </nav>
 
+                    {/* Mobile Drawer */}
                     {isMobileMenuOpen && (
                         <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
-                            <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-3">
                                 <button onClick={() => { setCurrentView("store"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Store</button>
                                 <button onClick={() => { setCurrentView("tracking"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Repair Tracking</button>
+                                <button onClick={() => { setCurrentView("admin"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Staff Portal</button>
+                                <a href="tel:+919059895427" className="font-bold text-left p-3 rounded-xl bg-yellow-400/10 text-yellow-400">Call: +91 90598 95427</a>
                             </div>
                         </div>
                     )}
 
+                    {/* Cart Slide-Over */}
+                    {isCartOpen && (
+                        <div className="fixed inset-0 z-[9999] overflow-hidden">
+                            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
+                            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+                                <div className="w-screen max-w-md bg-zinc-900 border-l border-white/10 p-6 flex flex-col animate-slide-in-right shadow-2xl">
+                                    <div className="flex items-center justify-between pb-4 border-b border-white/10">
+                                        <h2 className="text-2xl font-black text-white flex items-center gap-2"><i className="fas fa-shopping-bag text-yellow-400"></i> Your Cart</h2>
+                                        <button onClick={() => setIsCartOpen(false)} className="text-zinc-400 hover:text-white p-2"><i className="fas fa-times text-xl"></i></button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto py-4 space-y-4 hide-scrollbar">
+                                        {cart.length === 0 ? (
+                                            <div className="text-center py-16 text-zinc-500">
+                                                <i className="fas fa-shopping-cart text-5xl mb-4 opacity-30"></i>
+                                                <p className="text-lg font-medium">Your cart is empty</p>
+                                            </div>
+                                        ) : (
+                                            cart.map(item => (
+                                                <div key={item.id} className="flex gap-4 bg-black/40 p-4 rounded-2xl border border-white/5 items-center">
+                                                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-xl border border-white/10" />
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-sm text-white line-clamp-1">{item.name}</h4>
+                                                        <p className="text-yellow-400 font-extrabold text-sm">{formatINR(item.price)}</p>
+                                                        <div className="flex items-center gap-3 mt-2">
+                                                            <button onClick={() => updateQuantity(item.id, -1)} className="w-7 h-7 bg-zinc-800 hover:bg-zinc-700 rounded-lg flex items-center justify-center font-bold text-xs">-</button>
+                                                            <span className="font-bold text-sm">{item.quantity}</span>
+                                                            <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 bg-zinc-800 hover:bg-zinc-700 rounded-lg flex items-center justify-center font-bold text-xs">+</button>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => updateQuantity(item.id, -item.quantity)} className="text-red-400 hover:text-red-300 p-2"><i className="fas fa-trash-alt text-sm"></i></button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                    {cart.length > 0 && (
+                                        <div className="pt-4 border-t border-white/10 space-y-4">
+                                            <div className="flex justify-between items-baseline">
+                                                <span className="text-zinc-400 font-bold">Subtotal</span>
+                                                <span className="text-2xl font-black text-yellow-400">{formatINR(cartTotal)}</span>
+                                            </div>
+                                            <button onClick={() => { setIsCartOpen(false); setIsCheckoutModalOpen(true); }} className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+                                                Proceed to Checkout
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main Content Area */}
                     <div className="flex-grow pt-24">
                         
+                        {/* ========================================================= */}
+                        {/* 1. STORE VIEW */}
+                        {/* ========================================================= */}
                         {currentView === "store" && (
                             <>
-                                <div className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+                                {/* Hero Section */}
+                                <div className="relative h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden">
                                     <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#03050d] via-transparent to-[#03050d]"></div>
                                     <div className="relative z-10 text-center max-w-4xl px-4 animate-fade-in-up">
-                                        <p className="text-yellow-400 font-bold tracking-[5px] uppercase mb-4 text-sm">Premier IT Hub Midhilapur</p>
+                                        <p className="text-yellow-400 font-bold tracking-[5px] uppercase mb-4 text-sm">Premier IT Hub Midhilapuri</p>
                                         <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">Expertise You Can <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 drop-shadow-[0_0_20px_rgba(255,215,0,0.3)]">Trust.</span></h1>
                                         <p className="text-zinc-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto font-medium">Specializing in Chip-Level Repairs, MacBook Services, and Custom Gaming Builds.</p>
                                         <div className="flex flex-wrap justify-center gap-4">
-                                            <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" target="_blank" className="bg-
+                                            <a href="https://maps.app.goo.gl/xoYxYefyyWhst4RN6" target="_blank" className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-8 py-4 rounded-2xl flex items-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.3)] transition-all">
+                                                <i className="fas fa-location-dot"></i> Visit Store
+                                            </a>
+                                            <button onClick={() => setCurrentView('tracking')} className="bg-white/10 hover:bg-white/20 text-white font-extrabold px-8 py-4 rounded-2xl backdrop-blur-md border border-white/10 flex items-center gap-2 transition-all">
+                                                <i className="fas fa-magnifying-glass"></i> Track Repair
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Services Showcase */}
+                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                                    <div className="text-center max-w-2xl mx-auto mb-12">
+                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Our Core Specializations</h2>
+                                        <p className="text-zinc-400 text-sm">Complete hardware solutions engineered with precision diagnostics and zero-compromise quality.</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {SERVICES.map((s, idx) => (
+                                            <div key={idx} className="bg-zinc-900/60 border border-white/5 p-6 rounded-3xl hover:border-yellow-400/30 transition-all group">
+                                                <div className="w-12 h-12 rounded-2xl bg-yellow-400/10 text-yellow-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                                                    <i className={`fas ${s.icon}`}></i>
+                                                </div>
+                                                <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+                                                <p className="text-zinc-400 text-sm leading-relaxed">{s.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Hardware Catalog */}
+                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
+                                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+                                        <div>
+                                            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-2">Featured Hardware & Accessories</h2>
+                                            <p className="text-zinc-400 text-sm">Genuine components, peripherals, and high-performance upgrades.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {CATEGORIES.map(cat => (
+                                                <button
+                                                    key={cat}
+                                                    onClick={() => setActiveCategory(cat)}
+                                                    className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${activeCategory === cat ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`}
+                                                >
+                                                    {cat}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {filteredProducts.map(product => (
+                                            <div key={product.id} className="bg-zinc-900/60 border border-white/5 rounded-3xl overflow-hidden flex flex-col hover:border-yellow-400/20 transition-all group">
+                                                <div className="relative h-48 overflow-hidden bg-black/40">
+                                                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                    <span className="absolute top-3 left-3 bg-black/70 backdrop-blur-md text-yellow-400 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border border-yellow-400/30">{product.category}</span>
+                                                </div>
+                                                <div className="p-5 flex-1 flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex items-center gap-1 text-yellow-400 text-xs mb-2">
+                                                            <i className="fas fa-star"></i>
+                                                            <span className="font-bold text-white ml-1">{product.rating}</span>
+                                                            <span className="text-zinc-500">({product.reviews})</span>
+                                                        </div>
+                                                        <h3 className="font-bold text-white text-base mb-3 line-clamp-2">{product.name}</h3>
+                                                    </div>
+                                                    <div className="pt-3 border-t border-white/5 flex items-center justify-between mt-auto">
+                                                        <span className="text-xl font-black text-yellow-400">{formatINR(product.price)}</span>
+                                                        <button onClick={() => addToCart(product)} className="bg-white/10 hover:bg-yellow-400 hover:text-black text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all">
+                                                            <i className="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* ========================================================= */}
+                        {/* 2. REPAIR TRACKING VIEW */}
+                        {/* ========================================================= */}
+                        {currentView === "tracking" && (
+                            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
+                                <div className="text-center mb-10">
+                                    <div className="w-16 h-16 bg-yellow-400/10 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-yellow-400/20 text-2xl">
+                                        <i className="fas fa-magnifying-glass"></i>
+                                    </div>
+                                    <h1 className="text-4xl font-black tracking-tight mb-2">Live Repair Status Tracker</h1>
+                                    <p className="text-zinc-400 text-sm">Enter your Ticket ID (e.g. <strong className="text-white">RC2026-798</strong>) or 10-digit registered mobile number.</p>
+                                </div>
+
+                                <form onSubmit={handleTrackLookup} className="bg-zinc-900/80 border border-white/10 p-4 sm:p-6 rounded-3xl shadow-2xl mb-8">
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <input 
+                                            type="text" 
+                                            value={trackingQuery} 
+                                            onChange={(e) => setTrackingQuery(e.target.value)} 
+                                            placeholder="Enter Ticket ID or Mobile Number..." 
+                                            className="flex-1 bg-black/50 border border-white/10 rounded-2xl px-5 py-4 text-white font-medium focus:outline-none focus:border-yellow-400 transition-colors"
+                                        />
+                                        <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-8 py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(250,204,21,0.3)] flex items-center justify-center gap-2">
+                                            <i className="fas fa-search"></i> Search
+                                        </button>
+                                    </div>
+                                    {trackingError && (
+                                        <p className="mt-4 text-red-400 text-sm font-medium flex items-center gap-2"><i className="fas fa-exclamation-circle"></i> {trackingError}</p>
+                                    )}
+                                </form>
+
+                                {searchedTicket && (
+                                    <div className="bg-zinc-900/90 border border-yellow-400/30 rounded-3xl p-6 sm:p-8 shadow-2xl animate-fade-in-up">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
+                                            <div>
+                                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Repair Ticket</span>
+                                                <h2 className="text-3xl font-black text-white">{searchedTicketId}</h2>
+                                                <p className="text-xs text-zinc-400 mt-1">Drop-off Date: <span className="text-white font-semibold">{formatDate(searchedTicket.date)}</span></p>
+                                            </div>
+                                            <span className={`px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wider self-start sm:self-auto ${getStatusBadge(searchedTicket.status)}`}>
+                                                {searchedTicket.status}
+                                            </span>
+                                        </div>
+
+                                        {/* Status Stepper */}
+                                        <div className="py-8 border-b border-white/10">
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                                                {["Received", "Diagnosing", "Repairing", "Ready for Pickup"].map((step, idx) => {
+                                                    const stepOrder = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
+                                                    const currentIdx = stepOrder.indexOf(searchedTicket.status);
+                                                    const isDone = currentIdx >= idx;
+                                                    const isCurrent = searchedTicket.status === step;
+                                                    return (
+                                                        <div key={step} className={`p-4 rounded-2xl border transition-all ${isCurrent ? 'bg-yellow-400/10 border-yellow-400 text-yellow-400' : isDone ? 'bg-white/5 border-white/10 text-white' : 'bg-black/20 border-white/5 text-zinc-600'}`}>
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-auto mb-2 font-black text-xs ${isCurrent ? 'bg-yellow-400 text-black' : isDone ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500'}`}>
+                                                                {isDone && !isCurrent ? <i className="fas fa-check"></i> : idx + 1}
+                                                            </div>
+                                                            <span className="text-xs font-bold">{step}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 text-sm">
+                                            <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                                                <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Customer</p>
+                                                <p className="font-extrabold text-white text-base">{String(searchedTicket.customer || '')}</p>
+                                            </div>
+                                            <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                                                <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Device Model</p>
+                                                <p className="font-extrabold text-white text-base">{String(searchedTicket.device || '')}</p>
+                                            </div>
+                                            <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                                                <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Reported Issue</p>
+                                                <p className="font-medium text-zinc-300">{String(searchedTicket.issue || 'General diagnostics')}</p>
+                                            </div>
+                                            <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                                                <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Estimated Cost</p>
+                                                <p className="font-black text-yellow-400 text-lg">
+                                                    {searchedTicket.cost && searchedTicket.cost.toLowerCase() !== 'pending' ? formatINR(searchedTicket.cost) : 'Pending Diagnostics'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {searchedTicket.remarks && (
+                                            <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/5 text-sm">
+                                                <span className="text-zinc-400 font-bold block mb-1">Staff Notes:</span>
+                                                <p className="text-zinc-300 italic">"{String(searchedTicket.remarks)}"</p>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-4">
+                                            <a 
+                                                href={`https://wa.me/919059895427?text=Hello%20Right%20Click%20Computers!%20Inquiring%20about%20my%20Ticket%20${searchedTicketId}`} 
+                                                target="_blank" 
+                                                className="flex-1 bg-[#25d366] hover:bg-[#20bd5a] text-white font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2"
+                                            >
+                                                <i className="fab fa-whatsapp text-lg"></i> Message Store Support
+                                            </a>
+                                            <a 
+                                                href="tel:+919059895427" 
+                                                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 border border-white/10"
+                                            >
+                                                <i className="fas fa-phone"></i> Call Store (+91 90598 95427)
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ========================================================= */}
+                        {/* 3. STAFF PORTAL / ADMIN DASHBOARD */}
+                        {/* ========================================================= */}
+                        {currentView === "admin" && (
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
+                                {!isAdminAuthenticated ? (
+                                    <div className="max-w-md mx-auto bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl shadow-2xl">
+                                        <div className="text-center mb-6">
+                                            <div className="w-16 h-16 bg-yellow-400/10 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-yellow-400/20 text-2xl">
+                                                <i className="fas fa-lock"></i>
+                                            </div>
+                                            <h2 className="text-2xl font-black text-white">Staff Portal Login</h2>
+                                            <p className="text-zinc-400 text-xs mt-1">Authorized personnel and technicians only.</p>
+                                        </div>
+                                        <form onSubmit={handleAdminLogin} className="space-y-4">
+                                            <div>
+                                                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Username</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={loginUsername} 
+                                                    onChange={e => setLoginUsername(e.target.value)} 
+                                                    placeholder="Enter username" 
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
+                                                    required 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Password</label>
+                                                <input 
+                                                    type="password" 
+                                                    value={loginPassword} 
+                                                    onChange={e => setLoginPassword(e.target.value)} 
+                                                    placeholder="Enter password" 
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
+                                                    required 
+                                                />
+                                            </div>
+                                            {loginError && <p className="text-red-400 text-xs font-bold">{loginError}</p>}
+                                            <button type="submit" className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(250,204,21,0.3)]">
+                                                Authenticate & Access
+                                            </button>
+                                        </form>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {/* Dashboard Header */}
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-white/10 gap-4">
+                                            <div>
+                                                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">Control Center</span>
+                                                <h1 className="text-3xl font-black text-white">Repair Tickets Dashboard</h1>
+                                            </div>
+                                            <div className="flex flex-wrap gap-3">
+                                                <button onClick={fetchCloudData} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2" title="Reload from Google Sheets">
+                                                    <i className={`fas fa-rotate ${isLoadingCloud ? 'fa-spin' : ''}`}></i> Sync
+                                                </button>
+                                                <button onClick={() => setIsCreateModalOpen(true)} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-6 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
+                                                    <i className="fas fa-plus"></i> New Ticket
+                                                </button>
+                                                <button onClick={handleAdminLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-xl border border-white/10 flex items-center gap-2">
+                                                    <i className="fas fa-sign-out-alt"></i> Logout
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Filter Bar */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                            <div className="md:col-span-2">
+                                                <input 
+                                                    type="text" 
+                                                    value={adminSearch} 
+                                                    onChange={e => setAdminSearch(e.target.value)} 
+                                                    placeholder="Search by Ticket ID, Customer, Phone, or Device..." 
+                                                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
+                                                />
+                                            </div>
+                                            <div>
+                                                <select 
+                                                    value={adminStatusFilter} 
+                                                    onChange={e => setAdminStatusFilter(e.target.value)} 
+                                                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
+                                                >
+                                                    <option value="All">All Statuses ({Object.keys(ticketsData || {}).length})</option>
+                                                    {STATUS_OPTIONS.map(st => (
+                                                        <option key={st} value={st}>{st}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* 6-Column Segregated Table */}
+                                        <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+                                            <div className="overflow-x-auto min-w-[850px]">
+                                                <table className="w-full text-left border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-black/50 border-b border-white/10 text-zinc-400 text-xs uppercase tracking-wider">
+                                                            <th className="py-4 px-6 font-extrabold">Ticket ID & Date</th>
+                                                            <th className="py-4 px-6 font-extrabold">Customer Info</th>
+                                                            <th className="py-4 px-6 font-extrabold">Device & Remarks</th>
+                                                            <th className="py-4 px-6 font-extrabold">Status</th>
+                                                            <th className="py-4 px-6 font-extrabold">Cost (INR)</th>
+                                                            <th className="py-4 px-6 font-extrabold text-right">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-white/5 text-sm">
+                                                        {sortedTicketsList.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan="6" className="py-12 text-center text-zinc-500 font-medium">No tickets found in database.</td>
+                                                            </tr>
+                                                        ) : (
+                                                            sortedTicketsList.map(ticket => {
+                                                                const isEditing = editingTicketId === ticket.id;
+
+                                                                if (isEditing) {
+                                                                    return (
+                                                                        <tr key={ticket.id} className="bg-yellow-400/5">
+                                                                            <td className="py-4 px-6 align-top">
+                                                                                <span className="font-black text-white block">{ticket.id}</span>
+                                                                                <input 
+                                                                                    type="date" 
+                                                                                    value={editFormData.date || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, date: e.target.value })} 
+                                                                                    className="mt-1 bg-black border border-white/20 rounded p-1 text-xs text-white"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="py-4 px-6 align-top">
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    value={editFormData.customer || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, customer: e.target.value })} 
+                                                                                    placeholder="Customer Name"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white mb-1"
+                                                                                />
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    value={editFormData.mobile || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, mobile: e.target.value })} 
+                                                                                    placeholder="10-digit Phone"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="py-4 px-6 align-top">
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    value={editFormData.device || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, device: e.target.value })} 
+                                                                                    placeholder="Device Model"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white mb-1"
+                                                                                />
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    value={editFormData.remarks || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, remarks: e.target.value })} 
+                                                                                    placeholder="Condition / Remarks"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="py-4 px-6 align-top">
+                                                                                <select 
+                                                                                    value={editFormData.status || "Received"} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, status: e.target.value })} 
+                                                                                    className="bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                >
+                                                                                    {STATUS_OPTIONS.map(st => (
+                                                                                        <option key={st} value={st}>{st}</option>
+                                                                                    ))}
+                                                                                </select>
+                                                                            </td>
+                                                                            <td className="py-4 px-6 align-top">
+                                                                                <input 
+                                                                                    type="text" 
+                                                                                    value={editFormData.cost || ""} 
+                                                                                    onChange={e => setEditFormData({ ...editFormData, cost: e.target.value })} 
+                                                                                    placeholder="e.g. 3500 or Pending"
+                                                                                    className="w-28 bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="py-4 px-6 align-top text-right space-x-2">
+                                                                                <button onClick={() => saveTicketEdit(ticket.id)} className="bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-3 py-1.5 rounded-lg text-xs">Save</button>
+                                                                                <button onClick={() => setEditingTicketId(null)} className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Cancel</button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
+                                                                        {/* Column 1: TICKET ID & DATE */}
+                                                                        <td className="py-4 px-6 align-middle">
+                                                                            <span className="font-black text-white block">{ticket.id}</span>
+                                                                            <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
+                                                                        </td>
+
+                                                                        {/* Column 2: CUSTOMER INFO */}
+                                                                        <td className="py-4 px-6 align-middle">
+                                                                            <span className="font-bold text-white block">{String(ticket.customer || '')}</span>
+                                                                            {ticket.mobile && (
+                                                                                <a href={`tel:${ticket.mobile}`} className="text-yellow-400 hover:text-yellow-300 text-xs font-semibold flex items-center gap-1.5 mt-0.5">
+                                                                                    <i className="fas fa-phone text-[10px]"></i> {String(ticket.mobile)}
+                                                                                </a>
+                                                                            )}
+                                                                        </td>
+
+                                                                        {/* Column 3: DEVICE & REMARKS */}
+                                                                        <td className="py-4 px-6 align-middle">
+                                                                            <span className="font-bold text-zinc-200 block">{String(ticket.device || '')}</span>
+                                                                            {ticket.remarks && <span className="text-zinc-400 italic text-xs block truncate max-w-xs">"{String(ticket.remarks)}"</span>}
+                                                                        </td>
+
+                                                                        {/* Column 4: STATUS */}
+                                                                        <td className="py-4 px-6 align-middle">
+                                                                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${getStatusBadge(ticket.status)}`}>
+                                                                                {ticket.status}
+                                                                            </span>
+                                                                        </td>
+
+                                                                        {/* Column 5: COST (INR) */}
+                                                                        <td className="py-4 px-6 align-middle font-extrabold text-white">
+                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal">Pending</span>}
+                                                                        </td>
+
+                                                                        {/* Column 6: ACTIONS */}
+                                                                        <td className="py-4 px-6 align-middle text-right">
+                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                <button 
+                                                                                    onClick={() => startEditingTicket(ticket.id, ticket)} 
+                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"
+                                                                                    title="Edit Ticket"
+                                                                                >
+                                                                                    <i className="fas fa-pen text-[10px]"></i> Edit
+                                                                                </button>
+                                                                                <button 
+                                                                                    onClick={() => sendCustomerNotification(ticket, ticket.id)} 
+                                                                                    className="bg-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-[#25d366]/30"
+                                                                                    title="Send WhatsApp Update"
+                                                                                >
+                                                                                    <i className="fab fa-whatsapp text-xs"></i> Notify
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                );
+                                                            })
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                    </div>
+
+                    {/* CREATE TICKET MODAL */}
+                    {isCreateModalOpen && (
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)}></div>
+                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl w-full max-w-xl relative z-10 animate-slide-in-right shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+                                <button onClick={() => setIsCreateModalOpen(false)} className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2"><i className="fas fa-times"></i></button>
+                                <h2 className="text-2xl font-black text-white mb-1 flex items-center gap-2">
+                                    <i className="fas fa-plus-circle text-yellow-400"></i> New Repair Ticket
+                                </h2>
+                                <p className="text-zinc-400 text-xs mb-6">Generated Ticket ID prefix will be <strong className="text-yellow-400">{PREFIX}-###</strong></p>
+
+                                <form onSubmit={handleCreateTicket} className="space-y-4 text-sm">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Ticket Serial # *</label>
+                                            <div className="flex items-center">
+                                                <span className="bg-black/60 border border-r-0 border-white/10 px-3 py-3 rounded-l-xl text-zinc-400 font-bold">{PREFIX}-</span>
+                                                <input 
+                                                    type="text" 
+                                                    value={newTicketForm.serialNumber} 
+                                                    onChange={e => setNewTicketForm({ ...newTicketForm, serialNumber: e.target.value })} 
+                                                    placeholder="798" 
+                                                    className="w-full bg-black/50 border border-white/10 rounded-r-xl p-3 text-white font-bold focus:outline-none focus:border-yellow-400" 
+                                                    required 
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Drop-off Date</label>
+                                            <input 
+                                                type="date" 
+                                                value={newTicketForm.date} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, date: e.target.value })} 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Customer Name *</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.customer} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, customer: e.target.value })} 
+                                                placeholder="e.g. Sai Ram" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                                required 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">10-Digit Mobile Number *</label>
+                                            <input 
+                                                type="tel" 
+                                                value={newTicketForm.mobile} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, mobile: e.target.value })} 
+                                                placeholder="e.g. 9393939376" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                                required 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Device Model *</label>
+                                        <input 
+                                            type="text" 
+                                            value={newTicketForm.device} 
+                                            onChange={e => setNewTicketForm({ ...newTicketForm, device: e.target.value })} 
+                                            placeholder="e.g. Dell Latitude 5490 / MacBook Air M2" 
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            required 
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Reported Issue</label>
+                                        <input 
+                                            type="text" 
+                                            value={newTicketForm.issue} 
+                                            onChange={e => setNewTicketForm({ ...newTicketForm, issue: e.target.value })} 
+                                            placeholder="e.g. No display / Motherboard short" 
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Estimated Cost (INR)</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.cost} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, cost: e.target.value })} 
+                                                placeholder="e.g. 3500 or Pending" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Diagnostic Remarks</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.remarks} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, remarks: e.target.value })} 
+                                                placeholder="e.g. Minor scratches, no adapter" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 flex gap-3">
+                                        <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-xl">Cancel</button>
+                                        <button type="submit" className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3.5 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.3)]">Create & Sync</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Footer */}
+                    <footer className="bg-black border-t border-white/10 mt-auto py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                                <div className="md:col-span-2">
+                                    <BrandLogo />
+                                    <p className="text-zinc-400 text-sm mt-4 max-w-sm leading-relaxed">
+                                        Premier IT hardware sales, custom gaming PC configurations, and chip-level diagnostic center located in Madhurawada, Visakhapatnam.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-3">Store Location</h4>
+                                    <p className="text-zinc-400 text-xs leading-relaxed">
+                                        Annapurna Arcade, Above SBI Bank,<br/>
+                                        PM Palem Main Road, Midhilapuri Vuda Layout,<br/>
+                                        Madhurawada, Visakhapatnam (Vizag),<br/>
+                                        Andhra Pradesh 530041, India
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-3">Direct Contact</h4>
+                                    <p className="text-zinc-400 text-xs mb-2"><i className="fas fa-phone text-yellow-400 mr-2"></i> +91 90598 95427</p>
+                                    <p className="text-zinc-400 text-xs mb-4"><i className="fas fa-clock text-yellow-400 mr-2"></i> Mon - Sat: 10:00 AM - 9:00 PM</p>
+                                    <button onClick={() => setCurrentView('admin')} className="text-xs text-zinc-500 hover:text-yellow-400 transition-colors">
+                                        Staff Portal Access &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="pt-8 border-t border-white/5 text-center text-zinc-600 text-xs">
+                                &copy; {CURRENT_YEAR} Right Click Computers Sales & Services. All Rights Reserved.
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        // --- ERROR BOUNDARY ---
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false };
+            }
+            static getDerivedStateFromError() {
+                return { hasError: true };
+            }
+            componentDidCatch(error, errorInfo) {
+                console.error("React Render Error:", error, errorInfo);
+            }
+            handleReset = () => {
+                localStorage.removeItem("rightclick_tickets");
+                window.location.reload();
+            };
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="min-h-screen flex items-center justify-center bg-[#03050d] text-white p-6">
+                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl max-w-lg text-center shadow-2xl">
+                                <div className="w-16 h-16 bg-yellow-400/10 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                                    <i className="fas fa-rotate"></i>
+                                </div>
+                                <h2 className="text-2xl font-black mb-2">Display Cache Refresh</h2>
+                                <p className="text-zinc-400 text-sm mb-6">A cache conflict occurred in the local browser. Click below to clear local storage and reload live data from Google Sheets.</p>
+                                <button onClick={this.handleReset} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-6 py-3 rounded-xl shadow-lg transition-all">
+                                    Clear Cache & Reload Dashboard
+                                </button>
+                            </div>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(
+            <ErrorBoundary>
+                <App />
+            </ErrorBoundary>
+        );
+    </script>
+</body>
+</html>
