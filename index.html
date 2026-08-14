@@ -12,7 +12,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & Babel for in-browser compilation -->
+    <!-- React & Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -40,11 +40,7 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
 
-        // ==========================================
-        // 🚀 LIVE GOOGLE SHEETS DATABASE URL
-        // ==========================================
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxVemzlfo2MEBg45kAyWRIPxbHfor9MokQ7RZJAtf-GsCVbBNs6BIHZql-4QM_S8eeV/exec"; 
-        // ==========================================
 
         const PRODUCTS = [
             { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
@@ -86,72 +82,34 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BULLETPROOF DATA SANITIZER ---
         const parseTicketFields = (ticket) => {
             if (!ticket) {
-                return {
-                    customer: "Customer Name", mobile: "", device: "Device Model",
-                    issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null
-                };
+                return { customer: "", mobile: "", device: "", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
             }
 
-            // Handle accidental array-wrapped rows
             if (Array.isArray(ticket)) {
                 return {
-                    customer: String(ticket || "Customer Name"),
+                    customer: String(ticket || "").trim(),
                     mobile: String(ticket || "").replace(/\D/g, '').slice(-10),
-                    device: String(ticket[3] || "Device Model"),
-                    issue: String(ticket[4] || ""),
-                    remarks: String(ticket[5] || ""),
-                    status: String(ticket[6] || "Received"),
-                    date: String(ticket[7] || ""),
-                    cost: String(ticket[8] || "Pending"),
+                    device: String(ticket || "").trim(),
+                    issue: String(ticket[4] || "").trim(),
+                    remarks: String(ticket[5] || "").trim(),
+                    status: String(ticket[6] || "Received").trim(),
+                    date: String(ticket[7] || "").trim(),
+                    cost: String(ticket[8] || "Pending").trim(),
                     deliveredAt: ticket[9] || null
                 };
             }
 
-            let rawCustomer = ticket.customer !== undefined && ticket.customer !== null ? (typeof ticket.customer === 'object' ? '' : String(ticket.customer).trim()) : "";
-            let rawMobile = ticket.mobile !== undefined && ticket.mobile !== null ? (typeof ticket.mobile === 'object' ? '' : String(ticket.mobile).trim()) : "";
-            let rawDevice = ticket.device !== undefined && ticket.device !== null ? (typeof ticket.device === 'object' ? '' : String(ticket.device).trim()) : "";
-            let rawIssue = ticket.issue !== undefined && ticket.issue !== null ? (typeof ticket.issue === 'object' ? '' : String(ticket.issue).trim()) : "";
-            let rawRemarks = ticket.remarks !== undefined && ticket.remarks !== null ? (typeof ticket.remarks === 'object' ? '' : String(ticket.remarks).trim()) : "";
-            let rawStatus = ticket.status !== undefined && ticket.status !== null ? (typeof ticket.status === 'object' ? 'Received' : String(ticket.status).trim()) : "Received";
-            let rawDate = ticket.date !== undefined && ticket.date !== null ? (typeof ticket.date === 'object' ? '' : String(ticket.date).trim()) : "";
-            let rawCost = ticket.cost !== undefined && ticket.cost !== null ? (typeof ticket.cost === 'object' ? 'Pending' : String(ticket.cost).trim()) : "Pending";
-
-            // If legacy comma-concatenated string is detected, unpack safely
-            if (rawCustomer.includes(",")) {
-                let items = rawCustomer.split(",").map(s => String(s).trim());
-                if (items.length >= 2) {
-                    rawCustomer = items || items[0] || "";
-                    if (items) rawMobile = items;
-                    if (items[3]) rawDevice = items[3];
-                    if (items[4]) rawIssue = items[4];
-                    if (items[5]) rawRemarks = items[5];
-                    if (items[6]) rawStatus = items[6];
-                    if (items[7]) rawDate = items[7];
-                    if (items[8]) rawCost = items[8];
-                }
-            }
-
-            // Extract clean 10-digit mobile number
-            let mobileClean = String(rawMobile).replace(/\D/g, '');
-            if (mobileClean.length > 10) {
-                mobileClean = mobileClean.slice(-10);
-            }
-
-            // Strip accidental TicketID prefixes from customer names
-            let cleanCustomer = String(rawCustomer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
-
             return {
-                customer: cleanCustomer || "Customer Name",
-                mobile: mobileClean || String(rawMobile),
-                device: String(rawDevice) || "Device Model",
-                issue: String(rawIssue) || "",
-                remarks: String(rawRemarks) || "",
-                status: String(rawStatus) || "Received",
-                date: String(rawDate) || "",
-                cost: String(rawCost) || "Pending",
+                customer: ticket.customer ? String(ticket.customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim() : "",
+                mobile: ticket.mobile ? String(ticket.mobile).replace(/\D/g, '').slice(-10) : "",
+                device: ticket.device ? String(ticket.device).trim() : "",
+                issue: ticket.issue ? String(ticket.issue).trim() : "",
+                remarks: ticket.remarks ? String(ticket.remarks).trim() : "",
+                status: ticket.status ? String(ticket.status).trim() : "Received",
+                date: ticket.date ? String(ticket.date).trim() : "",
+                cost: ticket.cost ? String(ticket.cost).trim() : "Pending",
                 deliveredAt: ticket.deliveredAt || null
             };
         };
@@ -229,26 +187,24 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // Cloud Fetch Helper
-            const fetchCloudData = () => {
+            // Force Fetch Live Data from Google Sheets
+            const fetchCloudData = (isManual = false) => {
                 if (!GOOGLE_SHEETS_API_URL) return;
                 setIsLoadingCloud(true);
                 fetch(GOOGLE_SHEETS_API_URL)
                     .then(res => res.json())
                     .then(data => {
                         setIsLoadingCloud(false);
-                        if (data && typeof data === 'object' && !data.error && Object.keys(data).length > 0) {
+                        if (data && typeof data === 'object' && !data.error) {
                             const sanitized = {};
                             for (const key in data) {
                                 if (key && key.toLowerCase() !== "error") {
                                     sanitized[key] = parseTicketFields(data[key]);
                                 }
                             }
-                            if (Object.keys(sanitized).length > 0) {
-                                setTicketsData(sanitized);
-                                localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
-                                showToast("Data synchronized with Google Sheet");
-                            }
+                            setTicketsData(sanitized);
+                            localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
+                            if (isManual) showToast("Synchronized with Google Sheet!");
                         }
                     })
                     .catch(err => {
@@ -257,7 +213,7 @@
                     });
             };
 
-            // --- INSTANT DUAL-SYNC INITIAL LOAD ---
+            // Load on Start
             useEffect(() => {
                 const localSaved = localStorage.getItem("rightclick_tickets");
                 if (localSaved) {
@@ -274,7 +230,7 @@
                         localStorage.removeItem("rightclick_tickets");
                     }
                 }
-                fetchCloudData();
+                fetchCloudData(false);
             }, []);
 
             const saveDataToCloudOrLocal = (data) => {
@@ -289,7 +245,7 @@
                 }
             };
 
-            // --- AUTO CLEANUP (DELIVERED TICKETS AFTER 3 DAYS) ---
+            // Auto-clean delivered tickets after 3 days
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -357,6 +313,7 @@
                 if (loginUsername.toLowerCase().trim() === 'rightclick' && loginPassword.trim() === '9059895427') {
                     setIsAdminAuthenticated(true);
                     setLoginError(''); setLoginUsername(''); setLoginPassword('');
+                    fetchCloudData(false);
                     showToast("Staff Access Granted");
                 } else {
                     setLoginError("Invalid username or password.");
@@ -417,10 +374,8 @@
                 showToast(`Saved updates for ${id}`);
             };
 
-            // --- SANITIZED WHATSAPP NOTIFICATION ---
             const sendCustomerNotification = (ticket, id) => {
                 let mobileClean = String(ticket.mobile).replace(/\D/g, '');
-                
                 if (mobileClean.length === 10) {
                     mobileClean = '91' + mobileClean;
                 }
@@ -454,7 +409,6 @@
                 showToast("Opening WhatsApp...");
             };
 
-            // Repair Tracker Lookup Handler
             const handleTrackLookup = (e) => {
                 e.preventDefault();
                 setTrackingError("");
@@ -492,7 +446,6 @@
                 }
             };
 
-            // Safe Sorted Tickets for Admin Dashboard
             const sortedTicketsList = useMemo(() => {
                 const entries = Object.entries(ticketsData || {}).map(([id, t]) => ({ id, ...t }));
                 
@@ -606,14 +559,13 @@
                         </div>
                     )}
 
-                    {/* Navigation Bar */}
+                    {/* Clean Header: ONLY Store, Repair Tracking, and CALL EXPERT */}
                     <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
                             <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
                             <div className="hidden md:flex items-center space-x-8">
                                 <button onClick={() => setCurrentView("store")} className={`font-bold transition-colors ${currentView === 'store' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Store</button>
                                 <button onClick={() => setCurrentView("tracking")} className={`font-bold transition-colors ${currentView === 'tracking' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Repair Tracking</button>
-                                <button onClick={() => setCurrentView("admin")} className={`font-bold transition-colors ${currentView === 'admin' ? 'text-yellow-400' : 'text-zinc-300 hover:text-yellow-400'}`}>Staff Portal</button>
                                 <a href="tel:+919059895427" className="text-yellow-400 font-bold tracking-wider hover:text-yellow-300">CALL EXPERT</a>
                             </div>
                             <div className="flex items-center gap-4">
@@ -626,13 +578,12 @@
                         </div>
                     </nav>
 
-                    {/* Mobile Drawer */}
+                    {/* Mobile Menu */}
                     {isMobileMenuOpen && (
                         <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
                             <div className="flex flex-col gap-3">
                                 <button onClick={() => { setCurrentView("store"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Store</button>
                                 <button onClick={() => { setCurrentView("tracking"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Repair Tracking</button>
-                                <button onClick={() => { setCurrentView("admin"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Staff Portal</button>
                                 <a href="tel:+919059895427" className="font-bold text-left p-3 rounded-xl bg-yellow-400/10 text-yellow-400">Call: +91 90598 95427</a>
                             </div>
                         </div>
@@ -691,12 +642,9 @@
                     {/* Main Content Area */}
                     <div className="flex-grow pt-24">
                         
-                        {/* ========================================================= */}
                         {/* 1. STORE VIEW */}
-                        {/* ========================================================= */}
                         {currentView === "store" && (
                             <>
-                                {/* Hero Section */}
                                 <div className="relative h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden">
                                     <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#03050d] via-transparent to-[#03050d]"></div>
@@ -715,7 +663,6 @@
                                     </div>
                                 </div>
 
-                                {/* Services Showcase */}
                                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                                     <div className="text-center max-w-2xl mx-auto mb-12">
                                         <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Our Core Specializations</h2>
@@ -734,7 +681,6 @@
                                     </div>
                                 </div>
 
-                                {/* Hardware Catalog */}
                                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-white/5">
                                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
                                         <div>
@@ -784,9 +730,7 @@
                             </>
                         )}
 
-                        {/* ========================================================= */}
                         {/* 2. REPAIR TRACKING VIEW */}
-                        {/* ========================================================= */}
                         {currentView === "tracking" && (
                             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
                                 <div className="text-center mb-10">
@@ -828,7 +772,6 @@
                                             </span>
                                         </div>
 
-                                        {/* Status Stepper */}
                                         <div className="py-8 border-b border-white/10">
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                                                 {["Received", "Diagnosing", "Repairing", "Ready for Pickup"].map((step, idx) => {
@@ -896,9 +839,7 @@
                             </div>
                         )}
 
-                        {/* ========================================================= */}
-                        {/* 3. STAFF PORTAL / ADMIN DASHBOARD */}
-                        {/* ========================================================= */}
+                        {/* 3. STAFF PORTAL / ADMIN DASHBOARD (ACCESSIBLE VIA FOOTER ONLY) */}
                         {currentView === "admin" && (
                             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
                                 {!isAdminAuthenticated ? (
@@ -908,7 +849,7 @@
                                                 <i className="fas fa-lock"></i>
                                             </div>
                                             <h2 className="text-2xl font-black text-white">Staff Portal Login</h2>
-                                            <p className="text-zinc-400 text-xs mt-1">Authorized personnel and technicians only.</p>
+                                            <p className="text-zinc-400 text-xs mt-1">Authorized personnel only.</p>
                                         </div>
                                         <form onSubmit={handleAdminLogin} className="space-y-4">
                                             <div>
@@ -941,15 +882,14 @@
                                     </div>
                                 ) : (
                                     <div>
-                                        {/* Dashboard Header */}
                                         <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-white/10 gap-4">
                                             <div>
                                                 <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">Control Center</span>
                                                 <h1 className="text-3xl font-black text-white">Repair Tickets Dashboard</h1>
                                             </div>
                                             <div className="flex flex-wrap gap-3">
-                                                <button onClick={fetchCloudData} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2" title="Reload from Google Sheets">
-                                                    <i className={`fas fa-rotate ${isLoadingCloud ? 'fa-spin' : ''}`}></i> Sync
+                                                <button onClick={() => fetchCloudData(true)} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2" title="Reload from Google Sheets">
+                                                    <i className={`fas fa-rotate ${isLoadingCloud ? 'fa-spin' : ''}`}></i> Sync Sheet
                                                 </button>
                                                 <button onClick={() => setIsCreateModalOpen(true)} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-6 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
                                                     <i className="fas fa-plus"></i> New Ticket
@@ -960,7 +900,6 @@
                                             </div>
                                         </div>
 
-                                        {/* Filter Bar */}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                             <div className="md:col-span-2">
                                                 <input 
@@ -985,7 +924,6 @@
                                             </div>
                                         </div>
 
-                                        {/* 6-Column Segregated Table */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                             <div className="overflow-x-auto min-w-[850px]">
                                                 <table className="w-full text-left border-collapse">
@@ -1082,13 +1020,10 @@
 
                                                                 return (
                                                                     <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
-                                                                        {/* Column 1: TICKET ID & DATE */}
                                                                         <td className="py-4 px-6 align-middle">
                                                                             <span className="font-black text-white block">{ticket.id}</span>
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
-
-                                                                        {/* Column 2: CUSTOMER INFO */}
                                                                         <td className="py-4 px-6 align-middle">
                                                                             <span className="font-bold text-white block">{String(ticket.customer || '')}</span>
                                                                             {ticket.mobile && (
@@ -1097,26 +1032,18 @@
                                                                                 </a>
                                                                             )}
                                                                         </td>
-
-                                                                        {/* Column 3: DEVICE & REMARKS */}
                                                                         <td className="py-4 px-6 align-middle">
                                                                             <span className="font-bold text-zinc-200 block">{String(ticket.device || '')}</span>
                                                                             {ticket.remarks && <span className="text-zinc-400 italic text-xs block truncate max-w-xs">"{String(ticket.remarks)}"</span>}
                                                                         </td>
-
-                                                                        {/* Column 4: STATUS */}
                                                                         <td className="py-4 px-6 align-middle">
                                                                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${getStatusBadge(ticket.status)}`}>
                                                                                 {ticket.status}
                                                                             </span>
                                                                         </td>
-
-                                                                        {/* Column 5: COST (INR) */}
                                                                         <td className="py-4 px-6 align-middle font-extrabold text-white">
                                                                             {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal">Pending</span>}
                                                                         </td>
-
-                                                                        {/* Column 6: ACTIONS */}
                                                                         <td className="py-4 px-6 align-middle text-right">
                                                                             <div className="flex items-center justify-end gap-2">
                                                                                 <button 
@@ -1219,7 +1146,7 @@
                                             type="text" 
                                             value={newTicketForm.device} 
                                             onChange={e => setNewTicketForm({ ...newTicketForm, device: e.target.value })} 
-                                            placeholder="e.g. Dell Latitude 5490 / MacBook Air M2" 
+                                            placeholder="e.g. Dell Latitude 5490" 
                                             className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                             required 
                                         />
@@ -1231,7 +1158,7 @@
                                             type="text" 
                                             value={newTicketForm.issue} 
                                             onChange={e => setNewTicketForm({ ...newTicketForm, issue: e.target.value })} 
-                                            placeholder="e.g. No display / Motherboard short" 
+                                            placeholder="e.g. No power / Motherboard short" 
                                             className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                         />
                                     </div>
@@ -1253,7 +1180,7 @@
                                                 type="text" 
                                                 value={newTicketForm.remarks} 
                                                 onChange={e => setNewTicketForm({ ...newTicketForm, remarks: e.target.value })} 
-                                                placeholder="e.g. Minor scratches, no adapter" 
+                                                placeholder="e.g. MB Issue" 
                                                 className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                             />
                                         </div>
@@ -1268,7 +1195,7 @@
                         </div>
                     )}
 
-                    {/* Footer */}
+                    {/* Footer with Discrete Staff Portal Link */}
                     <footer className="bg-black border-t border-white/10 mt-auto py-12">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -1291,7 +1218,10 @@
                                     <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-3">Direct Contact</h4>
                                     <p className="text-zinc-400 text-xs mb-2"><i className="fas fa-phone text-yellow-400 mr-2"></i> +91 90598 95427</p>
                                     <p className="text-zinc-400 text-xs mb-4"><i className="fas fa-clock text-yellow-400 mr-2"></i> Mon - Sat: 10:00 AM - 9:00 PM</p>
-                                    <button onClick={() => setCurrentView('admin')} className="text-xs text-zinc-500 hover:text-yellow-400 transition-colors">
+                                    <button 
+                                        onClick={() => { setCurrentView('admin'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+                                        className="text-xs text-zinc-500 hover:text-yellow-400 transition-colors"
+                                    >
                                         Staff Portal Access &rarr;
                                     </button>
                                 </div>
@@ -1305,49 +1235,8 @@
             );
         }
 
-        // --- ERROR BOUNDARY ---
-        class ErrorBoundary extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false };
-            }
-            static getDerivedStateFromError() {
-                return { hasError: true };
-            }
-            componentDidCatch(error, errorInfo) {
-                console.error("React Render Error:", error, errorInfo);
-            }
-            handleReset = () => {
-                localStorage.removeItem("rightclick_tickets");
-                window.location.reload();
-            };
-            render() {
-                if (this.state.hasError) {
-                    return (
-                        <div className="min-h-screen flex items-center justify-center bg-[#03050d] text-white p-6">
-                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl max-w-lg text-center shadow-2xl">
-                                <div className="w-16 h-16 bg-yellow-400/10 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
-                                    <i className="fas fa-rotate"></i>
-                                </div>
-                                <h2 className="text-2xl font-black mb-2">Display Cache Refresh</h2>
-                                <p className="text-zinc-400 text-sm mb-6">A cache conflict occurred in the local browser. Click below to clear local storage and reload live data from Google Sheets.</p>
-                                <button onClick={this.handleReset} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-6 py-3 rounded-xl shadow-lg transition-all">
-                                    Clear Cache & Reload Dashboard
-                                </button>
-                            </div>
-                        </div>
-                    );
-                }
-                return this.props.children;
-            }
-        }
-
         const root = ReactDOM.createRoot(document.getElementById("root"));
-        root.render(
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-        );
+        root.render(<App />);
     </script>
 </body>
 </html>
