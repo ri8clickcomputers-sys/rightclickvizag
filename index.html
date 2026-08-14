@@ -41,7 +41,7 @@
         const { useState, useMemo, useEffect } = React;
 
         // ==========================================
-        // 🚀 LIVE GOOGLE SHEETS DEPLOYMENT (VERSION 21)
+        // 🚀 LIVE GOOGLE SHEETS API ENDPOINT
         // ==========================================
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxeb2y-95Rd1Mrs2267eoZhyauEtsRMUcdHi0xwwwFMD2YZeFVB7F8RsJMWIZcAi71X/exec"; 
         // ==========================================
@@ -86,7 +86,6 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- DIRECT FIELD MAPPER ---
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
                 return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
@@ -124,19 +123,19 @@
                 deliveredAt = ticket.deliveredAt || null;
             }
 
-            // Clean Customer
+            // Customer Name Clean
             customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
-            // Clean Mobile (10 digits)
+            // Mobile Clean (strictly 10 digits)
             let cleanMobile = String(mobile).replace(/\D/g, '');
             if (cleanMobile.length > 10) {
                 cleanMobile = cleanMobile.slice(-10);
             }
 
-            // Clean Device
+            // Device Clean
             device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
-            // Clean Status
+            // Status Enum Clean
             const validStatuses = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
             let cleanStatus = "Received";
             for (const st of validStatuses) {
@@ -146,7 +145,7 @@
                 }
             }
 
-            // Clean Cost
+            // Cost Clean
             let cleanCost = String(cost).trim();
             if (!cleanCost || cleanCost.toLowerCase() === "pending") {
                 cleanCost = "Pending";
@@ -236,6 +235,7 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
+            // Force Fetch Live Data from Google Sheets
             const fetchCloudData = (isManual = false) => {
                 if (!GOOGLE_SHEETS_API_URL) return;
                 setIsLoadingCloud(true);
@@ -261,13 +261,13 @@
                     });
             };
 
-            // Force cache wipe on mount to immediately load version 21
+            // On Mount: Clear local storage and fetch fresh data from Google Sheets
             useEffect(() => {
                 localStorage.removeItem("rightclick_tickets");
                 fetchCloudData(false);
             }, []);
 
-            const saveDataToCloudOrLocal = (data) => {
+            const saveDataToCloud = (data) => {
                 setTicketsData(data); 
                 localStorage.setItem("rightclick_tickets", JSON.stringify(data));
                 if (GOOGLE_SHEETS_API_URL) {
@@ -354,7 +354,7 @@
                 };
 
                 const updatedData = { ...ticketsData, [customId]: newTicket };
-                saveDataToCloudOrLocal(updatedData);
+                saveDataToCloud(updatedData);
                 
                 setIsCreateModalOpen(false);
                 setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() });
@@ -374,7 +374,7 @@
                     updatedTicket.deliveredAt = null;
                 }
                 const updatedData = { ...ticketsData, [id]: updatedTicket };
-                saveDataToCloudOrLocal(updatedData);
+                saveDataToCloud(updatedData);
                 setEditingTicketId(null);
                 showToast(`Saved updates for ${id}`);
             };
@@ -506,7 +506,7 @@
                         </div>
                     )}
 
-                    {/* Floating Quick Action Buttons */}
+                    {/* Floating Action Buttons */}
                     <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
                         <button 
                             onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} 
@@ -1032,7 +1032,7 @@
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
 
-                                                                        {/* 2. CUSTOMER INFO: Name + Dial Link Only */}
+                                                                        {/* 2. CUSTOMER INFO */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-white block text-sm leading-tight">{ticket.customer}</span>
                                                                             {ticket.mobile && (
@@ -1042,7 +1042,7 @@
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 3. DEVICE & REMARKS: Model + Issue/Notes Only */}
+                                                                        {/* 3. DEVICE & REMARKS */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-zinc-100 block text-sm">{ticket.device}</span>
                                                                             {ticket.remarks && (
