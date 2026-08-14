@@ -82,35 +82,104 @@
             return `${year}-${month}-${day}`;
         };
 
+        // --- INTELLIGENT FIELD UNPACKER & CLEANER ---
         const parseTicketFields = (ticket) => {
             if (!ticket) {
-                return { customer: "", mobile: "", device: "", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
+                return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
             }
 
+            let customer = "";
+            let mobile = "";
+            let device = "";
+            let issue = "";
+            let remarks = "";
+            let status = "Received";
+            let date = "";
+            let cost = "Pending";
+            let deliveredAt = null;
+
             if (Array.isArray(ticket)) {
-                return {
-                    customer: String(ticket || "").trim(),
-                    mobile: String(ticket || "").replace(/\D/g, '').slice(-10),
-                    device: String(ticket || "").trim(),
-                    issue: String(ticket[4] || "").trim(),
-                    remarks: String(ticket[5] || "").trim(),
-                    status: String(ticket[6] || "Received").trim(),
-                    date: String(ticket[7] || "").trim(),
-                    cost: String(ticket[8] || "Pending").trim(),
-                    deliveredAt: ticket[9] || null
-                };
+                customer = ticket || ticket[0] || "";
+                mobile = ticket || "";
+                device = ticket || "";
+                issue = ticket || "";
+                remarks = ticket || "";
+                status = ticket[6] || "Received";
+                date = ticket[7] || "";
+                cost = ticket[8] || "Pending";
+                deliveredAt = ticket[9] || null;
+            } else if (typeof ticket === 'object') {
+                customer = ticket.customer ? String(ticket.customer).trim() : "";
+                mobile = ticket.mobile ? String(ticket.mobile).trim() : "";
+                device = ticket.device ? String(ticket.device).trim() : "";
+                issue = ticket.issue ? String(ticket.issue).trim() : "";
+                remarks = ticket.remarks ? String(ticket.remarks).trim() : "";
+                status = ticket.status ? String(ticket.status).trim() : "Received";
+                date = ticket.date ? String(ticket.date).trim() : "";
+                cost = ticket.cost ? String(ticket.cost).trim() : "Pending";
+                deliveredAt = ticket.deliveredAt || null;
+            }
+
+            // UNPACK CONCATENATED ROW STRINGS IF DETECTED
+            const candidate = customer.includes(",") ? customer : (device.includes(",") ? device : (issue.includes(",") && /^RC\d+/i.test(issue) ? issue : ""));
+            if (candidate && candidate.includes(",")) {
+                const parts = candidate.split(",").map(s => s.trim());
+                if (parts.length >= 4) {
+                    if (/^RC\d+/i.test(parts[0])) {
+                        customer = parts || "";
+                        mobile = parts || "";
+                        device = parts || "";
+                        issue = parts || "";
+                        remarks = parts || "";
+                        if (parts[6]) status = parts[6];
+                        if (parts[7]) date = parts[7];
+                        if (parts[8]) cost = parts[8];
+                        if (parts[9]) deliveredAt = parts[9];
+                    } else {
+                        customer = parts[0] || "";
+                        mobile = parts || "";
+                        device = parts || "";
+                        issue = parts || "";
+                        remarks = parts || "";
+                        if (parts) status = parts;
+                        if (parts[6]) date = parts[6];
+                        if (parts[7]) cost = parts[7];
+                    }
+                }
+            }
+
+            // Clean Customer Name: Strip any TicketID prefixes or trailing comma text
+            customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+
+            // Clean Device Model: Strip any TicketID prefixes or full row echoes
+            if (/^RC\d+/i.test(device) && device.includes(",")) {
+                const devParts = device.split(",").map(s => s.trim());
+                device = devParts || devParts[0] || "";
+            }
+            device = String(device).replace(/^RC\d+-\d+/i, '').trim();
+
+            // Clean Mobile Number to clean 10 digits
+            let cleanMobile = String(mobile).replace(/\D/g, '');
+            if (cleanMobile.length > 10) {
+                cleanMobile = cleanMobile.slice(-10);
+            }
+
+            // Clean Remarks
+            if (typeof remarks === 'string' && /^RC\d+/i.test(remarks) && remarks.includes(",")) {
+                const remParts = remarks.split(",").map(s => s.trim());
+                remarks = remParts || "";
             }
 
             return {
-                customer: ticket.customer ? String(ticket.customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim() : "",
-                mobile: ticket.mobile ? String(ticket.mobile).replace(/\D/g, '').slice(-10) : "",
-                device: ticket.device ? String(ticket.device).trim() : "",
-                issue: ticket.issue ? String(ticket.issue).trim() : "",
-                remarks: ticket.remarks ? String(ticket.remarks).trim() : "",
-                status: ticket.status ? String(ticket.status).trim() : "Received",
-                date: ticket.date ? String(ticket.date).trim() : "",
-                cost: ticket.cost ? String(ticket.cost).trim() : "Pending",
-                deliveredAt: ticket.deliveredAt || null
+                customer: customer || "Customer Name",
+                mobile: cleanMobile || String(mobile),
+                device: device || "Device Model",
+                issue: issue || "",
+                remarks: remarks || "",
+                status: status || "Received",
+                date: date || "",
+                cost: cost || "Pending",
+                deliveredAt: deliveredAt || null
             };
         };
 
@@ -213,7 +282,7 @@
                     });
             };
 
-            // Load on Start
+            // Load on Mount
             useEffect(() => {
                 const localSaved = localStorage.getItem("rightclick_tickets");
                 if (localSaved) {
@@ -245,7 +314,7 @@
                 }
             };
 
-            // Auto-clean delivered tickets after 3 days
+            // 3-Day Delivered Cleanup
             useEffect(() => {
                 const cleanupInterval = setInterval(() => {
                     setTicketsData(prevData => {
@@ -730,7 +799,7 @@
                             </>
                         )}
 
-                        {/* 2. REPAIR TRACKING VIEW */}
+                        {/* 2. REPAIR TRACKING VIEW (CLEAN ISOLATED FIELDS) */}
                         {currentView === "tracking" && (
                             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
                                 <div className="text-center mb-10">
@@ -794,15 +863,15 @@
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 text-sm">
                                             <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
                                                 <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Customer</p>
-                                                <p className="font-extrabold text-white text-base">{String(searchedTicket.customer || '')}</p>
+                                                <p className="font-extrabold text-white text-base">{searchedTicket.customer}</p>
                                             </div>
                                             <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
                                                 <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Device Model</p>
-                                                <p className="font-extrabold text-white text-base">{String(searchedTicket.device || '')}</p>
+                                                <p className="font-extrabold text-white text-base">{searchedTicket.device}</p>
                                             </div>
                                             <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
                                                 <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Reported Issue</p>
-                                                <p className="font-medium text-zinc-300">{String(searchedTicket.issue || 'General diagnostics')}</p>
+                                                <p className="font-medium text-zinc-300">{searchedTicket.issue || "General diagnostics"}</p>
                                             </div>
                                             <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
                                                 <p className="text-zinc-400 text-xs font-bold uppercase mb-1">Estimated Cost</p>
@@ -815,7 +884,7 @@
                                         {searchedTicket.remarks && (
                                             <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/5 text-sm">
                                                 <span className="text-zinc-400 font-bold block mb-1">Staff Notes:</span>
-                                                <p className="text-zinc-300 italic">"{String(searchedTicket.remarks)}"</p>
+                                                <p className="text-zinc-300 italic">"{searchedTicket.remarks}"</p>
                                             </div>
                                         )}
 
@@ -839,7 +908,7 @@
                             </div>
                         )}
 
-                        {/* 3. STAFF PORTAL / ADMIN DASHBOARD (ACCESSIBLE VIA FOOTER ONLY) */}
+                        {/* 3. STAFF PORTAL / ADMIN DASHBOARD */}
                         {currentView === "admin" && (
                             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in-up">
                                 {!isAdminAuthenticated ? (
@@ -924,6 +993,7 @@
                                             </div>
                                         </div>
 
+                                        {/* STRICT 6-COLUMN SEGREGATION */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                             <div className="overflow-x-auto min-w-[850px]">
                                                 <table className="w-full text-left border-collapse">
@@ -1020,35 +1090,50 @@
 
                                                                 return (
                                                                     <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
+                                                                        {/* 1. TICKET ID & DATE */}
                                                                         <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-black text-white block">{ticket.id}</span>
+                                                                            <span className="font-black text-white block text-base">{ticket.id}</span>
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
+
+                                                                        {/* 2. CUSTOMER INFO: Name + Dial Mobile */}
                                                                         <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-bold text-white block">{String(ticket.customer || '')}</span>
+                                                                            <span className="font-bold text-white block text-base">{ticket.customer}</span>
                                                                             {ticket.mobile && (
-                                                                                <a href={`tel:${ticket.mobile}`} className="text-yellow-400 hover:text-yellow-300 text-xs font-semibold flex items-center gap-1.5 mt-0.5">
-                                                                                    <i className="fas fa-phone text-[10px]"></i> {String(ticket.mobile)}
+                                                                                <a href={`tel:${ticket.mobile}`} className="text-yellow-400 hover:text-yellow-300 text-xs font-bold flex items-center gap-1.5 mt-1 bg-yellow-400/10 px-2.5 py-1 rounded-lg w-fit border border-yellow-400/20">
+                                                                                    <i className="fas fa-phone-alt text-[10px]"></i> {ticket.mobile}
                                                                                 </a>
                                                                             )}
                                                                         </td>
+
+                                                                        {/* 3. DEVICE & REMARKS: Model + Remarks */}
                                                                         <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-bold text-zinc-200 block">{String(ticket.device || '')}</span>
-                                                                            {ticket.remarks && <span className="text-zinc-400 italic text-xs block truncate max-w-xs">"{String(ticket.remarks)}"</span>}
+                                                                            <span className="font-bold text-zinc-200 block text-sm">{ticket.device}</span>
+                                                                            {ticket.remarks && (
+                                                                                <span className="text-zinc-400 italic text-xs block truncate max-w-xs mt-0.5" title={ticket.remarks}>
+                                                                                    "{ticket.remarks}"
+                                                                                </span>
+                                                                            )}
                                                                         </td>
+
+                                                                        {/* 4. STATUS */}
                                                                         <td className="py-4 px-6 align-middle">
                                                                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${getStatusBadge(ticket.status)}`}>
                                                                                 {ticket.status}
                                                                             </span>
                                                                         </td>
-                                                                        <td className="py-4 px-6 align-middle font-extrabold text-white">
-                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal">Pending</span>}
+
+                                                                        {/* 5. COST (INR) */}
+                                                                        <td className="py-4 px-6 align-middle font-extrabold text-white text-base">
+                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal text-sm">Pending</span>}
                                                                         </td>
+
+                                                                        {/* 6. ACTIONS */}
                                                                         <td className="py-4 px-6 align-middle text-right">
                                                                             <div className="flex items-center justify-end gap-2">
                                                                                 <button 
                                                                                     onClick={() => startEditingTicket(ticket.id, ticket)} 
-                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"
+                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10"
                                                                                     title="Edit Ticket"
                                                                                 >
                                                                                     <i className="fas fa-pen text-[10px]"></i> Edit
@@ -1195,7 +1280,7 @@
                         </div>
                     )}
 
-                    {/* Footer with Discrete Staff Portal Link */}
+                    {/* Footer with Discreet Staff Portal Link */}
                     <footer className="bg-black border-t border-white/10 mt-auto py-12">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
