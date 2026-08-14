@@ -82,7 +82,6 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- PRECISE DATA PARSER ---
         const parseTicketFields = (ticket) => {
             if (!ticket) {
                 return { customer: "", mobile: "", device: "", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
@@ -120,41 +119,12 @@
                 deliveredAt = ticket.deliveredAt || null;
             }
 
-            // If any comma-concatenated string exists, unpack cleanly
-            const candidate = customer.includes(",") ? customer : (device.includes(",") ? device : (issue.includes(",") && /^RC\d+/i.test(issue) ? issue : ""));
-            if (candidate && candidate.includes(",")) {
-                const parts = candidate.split(",").map(s => s.trim());
-                if (parts.length >= 4) {
-                    if (/^RC\d+/i.test(parts[0])) {
-                        customer = parts || "";
-                        mobile = parts || "";
-                        device = parts || "";
-                        issue = parts || "";
-                        remarks = parts || "";
-                        if (parts) status = parts;
-                        if (parts[7]) date = parts[7];
-                        if (parts[8]) cost = parts[8];
-                        if (parts[9]) deliveredAt = parts[9];
-                    }
-                }
-            }
-
             customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
-            
-            if (/^RC\d+/i.test(device) && device.includes(",")) {
-                const devParts = device.split(",").map(s => s.trim());
-                device = devParts || devParts[0] || "";
-            }
-            device = String(device).replace(/^RC\d+-\d+/i, '').trim();
+            device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
             let cleanMobile = String(mobile).replace(/\D/g, '');
             if (cleanMobile.length > 10) {
                 cleanMobile = cleanMobile.slice(-10);
-            }
-
-            if (typeof remarks === 'string' && /^RC\d+/i.test(remarks) && remarks.includes(",")) {
-                const remParts = remarks.split(",").map(s => s.trim());
-                remarks = remParts || "";
             }
 
             return {
@@ -217,13 +187,11 @@
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
             
-            // Tracking State
             const [trackingQuery, setTrackingQuery] = useState("");
             const [searchedTicket, setSearchedTicket] = useState(null);
             const [searchedTicketId, setSearchedTicketId] = useState("");
             const [trackingError, setTrackingError] = useState("");
             
-            // Admin State
             const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
             const [loginUsername, setLoginUsername] = useState("");
             const [loginPassword, setLoginPassword] = useState("");
@@ -243,7 +211,6 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // Synchronize with Google Sheets
             const fetchCloudData = (isManual = false) => {
                 if (!GOOGLE_SHEETS_API_URL) return;
                 setIsLoadingCloud(true);
@@ -270,7 +237,7 @@
             };
 
             useEffect(() => {
-                localStorage.removeItem("rightclick_tickets"); // Clear local corrupt cache
+                localStorage.removeItem("rightclick_tickets");
                 fetchCloudData(false);
             }, []);
 
@@ -571,7 +538,7 @@
                         </div>
                     )}
 
-                    {/* Clean Header: ONLY Store, Repair Tracking, and CALL EXPERT */}
+                    {/* Navigation Bar */}
                     <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
                             <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
@@ -936,7 +903,7 @@
                                             </div>
                                         </div>
 
-                                        {/* STRICT COMPACT TABLE */}
+                                        {/* TIGHT, WELL-PROPORTIONED TABLE */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left border-collapse table-auto">
@@ -1039,7 +1006,7 @@
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
 
-                                                                        {/* 2. CUSTOMER INFO: Name + Dial Link Only */}
+                                                                        {/* 2. CUSTOMER INFO */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-white block text-sm leading-tight">{ticket.customer}</span>
                                                                             {ticket.mobile && (
@@ -1049,7 +1016,7 @@
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 3. DEVICE & REMARKS: Model + Issue/Notes Only */}
+                                                                        {/* 3. DEVICE & REMARKS */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-zinc-100 block text-sm">{ticket.device}</span>
                                                                             {ticket.remarks && (
