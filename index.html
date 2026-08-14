@@ -82,10 +82,10 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- INTELLIGENT FIELD UNPACKER & CLEANER ---
+        // --- PRECISE DATA PARSER ---
         const parseTicketFields = (ticket) => {
             if (!ticket) {
-                return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
+                return { customer: "", mobile: "", device: "", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
             }
 
             let customer = "";
@@ -104,7 +104,7 @@
                 device = ticket || "";
                 issue = ticket || "";
                 remarks = ticket || "";
-                status = ticket[6] || "Received";
+                status = ticket || "Received";
                 date = ticket[7] || "";
                 cost = ticket[8] || "Pending";
                 deliveredAt = ticket[9] || null;
@@ -120,7 +120,7 @@
                 deliveredAt = ticket.deliveredAt || null;
             }
 
-            // UNPACK CONCATENATED ROW STRINGS IF DETECTED
+            // If any comma-concatenated string exists, unpack cleanly
             const candidate = customer.includes(",") ? customer : (device.includes(",") ? device : (issue.includes(",") && /^RC\d+/i.test(issue) ? issue : ""));
             if (candidate && candidate.includes(",")) {
                 const parts = candidate.split(",").map(s => s.trim());
@@ -131,40 +131,27 @@
                         device = parts || "";
                         issue = parts || "";
                         remarks = parts || "";
-                        if (parts[6]) status = parts[6];
+                        if (parts) status = parts;
                         if (parts[7]) date = parts[7];
                         if (parts[8]) cost = parts[8];
                         if (parts[9]) deliveredAt = parts[9];
-                    } else {
-                        customer = parts[0] || "";
-                        mobile = parts || "";
-                        device = parts || "";
-                        issue = parts || "";
-                        remarks = parts || "";
-                        if (parts) status = parts;
-                        if (parts[6]) date = parts[6];
-                        if (parts[7]) cost = parts[7];
                     }
                 }
             }
 
-            // Clean Customer Name: Strip any TicketID prefixes or trailing comma text
             customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
-
-            // Clean Device Model: Strip any TicketID prefixes or full row echoes
+            
             if (/^RC\d+/i.test(device) && device.includes(",")) {
                 const devParts = device.split(",").map(s => s.trim());
                 device = devParts || devParts[0] || "";
             }
             device = String(device).replace(/^RC\d+-\d+/i, '').trim();
 
-            // Clean Mobile Number to clean 10 digits
             let cleanMobile = String(mobile).replace(/\D/g, '');
             if (cleanMobile.length > 10) {
                 cleanMobile = cleanMobile.slice(-10);
             }
 
-            // Clean Remarks
             if (typeof remarks === 'string' && /^RC\d+/i.test(remarks) && remarks.includes(",")) {
                 const remParts = remarks.split(",").map(s => s.trim());
                 remarks = remParts || "";
@@ -256,7 +243,7 @@
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // Force Fetch Live Data from Google Sheets
+            // Synchronize with Google Sheets
             const fetchCloudData = (isManual = false) => {
                 if (!GOOGLE_SHEETS_API_URL) return;
                 setIsLoadingCloud(true);
@@ -282,23 +269,8 @@
                     });
             };
 
-            // Load on Mount
             useEffect(() => {
-                const localSaved = localStorage.getItem("rightclick_tickets");
-                if (localSaved) {
-                    try {
-                        const parsedLocal = JSON.parse(localSaved);
-                        if (parsedLocal && typeof parsedLocal === 'object') {
-                            const sanitizedLocal = {};
-                            for (const k in parsedLocal) {
-                                sanitizedLocal[k] = parseTicketFields(parsedLocal[k]);
-                            }
-                            setTicketsData(sanitizedLocal);
-                        }
-                    } catch(e) {
-                        localStorage.removeItem("rightclick_tickets");
-                    }
-                }
+                localStorage.removeItem("rightclick_tickets"); // Clear local corrupt cache
                 fetchCloudData(false);
             }, []);
 
@@ -313,35 +285,6 @@
                     }).catch(err => console.error("Cloud Save Error:", err));
                 }
             };
-
-            // 3-Day Delivered Cleanup
-            useEffect(() => {
-                const cleanupInterval = setInterval(() => {
-                    setTicketsData(prevData => {
-                        const now = Date.now();
-                        const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
-                        let hasDeletes = false;
-                        const cleanedData = { ...prevData };
-
-                        for (const ticketId in cleanedData) {
-                            const ticket = cleanedData[ticketId];
-                            if (ticket.status === 'Delivered' && ticket.deliveredAt) {
-                                if (now - ticket.deliveredAt > THREE_DAYS_IN_MS) {
-                                    delete cleanedData[ticketId];
-                                    hasDeletes = true;
-                                }
-                            }
-                        }
-                        
-                        if (hasDeletes) {
-                            saveDataToCloudOrLocal(cleanedData);
-                            return cleanedData;
-                        }
-                        return prevData;
-                    });
-                }, 60000); 
-                return () => clearInterval(cleanupInterval);
-            }, []);
 
             const showToast = (msg) => {
                 setToastMessage(msg);
@@ -647,7 +590,7 @@
                         </div>
                     </nav>
 
-                    {/* Mobile Menu */}
+                    {/* Mobile Drawer */}
                     {isMobileMenuOpen && (
                         <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
                             <div className="flex flex-col gap-3">
@@ -799,7 +742,7 @@
                             </>
                         )}
 
-                        {/* 2. REPAIR TRACKING VIEW (CLEAN ISOLATED FIELDS) */}
+                        {/* 2. REPAIR TRACKING VIEW */}
                         {currentView === "tracking" && (
                             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in-up">
                                 <div className="text-center mb-10">
@@ -993,18 +936,18 @@
                                             </div>
                                         </div>
 
-                                        {/* STRICT 6-COLUMN SEGREGATION */}
+                                        {/* STRICT COMPACT TABLE */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-                                            <div className="overflow-x-auto min-w-[850px]">
-                                                <table className="w-full text-left border-collapse">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-left border-collapse table-auto">
                                                     <thead>
                                                         <tr className="bg-black/50 border-b border-white/10 text-zinc-400 text-xs uppercase tracking-wider">
-                                                            <th className="py-4 px-6 font-extrabold">Ticket ID & Date</th>
-                                                            <th className="py-4 px-6 font-extrabold">Customer Info</th>
-                                                            <th className="py-4 px-6 font-extrabold">Device & Remarks</th>
-                                                            <th className="py-4 px-6 font-extrabold">Status</th>
-                                                            <th className="py-4 px-6 font-extrabold">Cost (INR)</th>
-                                                            <th className="py-4 px-6 font-extrabold text-right">Actions</th>
+                                                            <th className="py-4 px-5 font-extrabold w-36">Ticket ID & Date</th>
+                                                            <th className="py-4 px-5 font-extrabold w-48">Customer Info</th>
+                                                            <th className="py-4 px-5 font-extrabold">Device & Remarks</th>
+                                                            <th className="py-4 px-5 font-extrabold w-36 text-center">Status</th>
+                                                            <th className="py-4 px-5 font-extrabold w-28 text-right">Cost (INR)</th>
+                                                            <th className="py-4 px-5 font-extrabold w-32 text-right">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-white/5 text-sm">
@@ -1019,16 +962,16 @@
                                                                 if (isEditing) {
                                                                     return (
                                                                         <tr key={ticket.id} className="bg-yellow-400/5">
-                                                                            <td className="py-4 px-6 align-top">
+                                                                            <td className="py-4 px-5 align-top">
                                                                                 <span className="font-black text-white block">{ticket.id}</span>
                                                                                 <input 
                                                                                     type="date" 
                                                                                     value={editFormData.date || ""} 
                                                                                     onChange={e => setEditFormData({ ...editFormData, date: e.target.value })} 
-                                                                                    className="mt-1 bg-black border border-white/20 rounded p-1 text-xs text-white"
+                                                                                    className="mt-1 bg-black border border-white/20 rounded p-1 text-xs text-white w-full"
                                                                                 />
                                                                             </td>
-                                                                            <td className="py-4 px-6 align-top">
+                                                                            <td className="py-4 px-5 align-top">
                                                                                 <input 
                                                                                     type="text" 
                                                                                     value={editFormData.customer || ""} 
@@ -1044,7 +987,7 @@
                                                                                     className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
                                                                                 />
                                                                             </td>
-                                                                            <td className="py-4 px-6 align-top">
+                                                                            <td className="py-4 px-5 align-top">
                                                                                 <input 
                                                                                     type="text" 
                                                                                     value={editFormData.device || ""} 
@@ -1060,29 +1003,29 @@
                                                                                     className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
                                                                                 />
                                                                             </td>
-                                                                            <td className="py-4 px-6 align-top">
+                                                                            <td className="py-4 px-5 align-top text-center">
                                                                                 <select 
                                                                                     value={editFormData.status || "Received"} 
                                                                                     onChange={e => setEditFormData({ ...editFormData, status: e.target.value })} 
-                                                                                    className="bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                    className="bg-black border border-white/20 rounded p-1.5 text-xs text-white w-full"
                                                                                 >
                                                                                     {STATUS_OPTIONS.map(st => (
                                                                                         <option key={st} value={st}>{st}</option>
                                                                                     ))}
                                                                                 </select>
                                                                             </td>
-                                                                            <td className="py-4 px-6 align-top">
+                                                                            <td className="py-4 px-5 align-top text-right">
                                                                                 <input 
                                                                                     type="text" 
                                                                                     value={editFormData.cost || ""} 
                                                                                     onChange={e => setEditFormData({ ...editFormData, cost: e.target.value })} 
-                                                                                    placeholder="e.g. 3500 or Pending"
-                                                                                    className="w-28 bg-black border border-white/20 rounded p-1.5 text-xs text-white"
+                                                                                    placeholder="3500 or Pending"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white text-right"
                                                                                 />
                                                                             </td>
-                                                                            <td className="py-4 px-6 align-top text-right space-x-2">
-                                                                                <button onClick={() => saveTicketEdit(ticket.id)} className="bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-3 py-1.5 rounded-lg text-xs">Save</button>
-                                                                                <button onClick={() => setEditingTicketId(null)} className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs">Cancel</button>
+                                                                            <td className="py-4 px-5 align-top text-right space-x-1">
+                                                                                <button onClick={() => saveTicketEdit(ticket.id)} className="bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-2.5 py-1.5 rounded-lg text-xs">Save</button>
+                                                                                <button onClick={() => setEditingTicketId(null)} className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs">Cancel</button>
                                                                             </td>
                                                                         </tr>
                                                                     );
@@ -1091,56 +1034,56 @@
                                                                 return (
                                                                     <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
                                                                         {/* 1. TICKET ID & DATE */}
-                                                                        <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-black text-white block text-base">{ticket.id}</span>
+                                                                        <td className="py-4 px-5 align-middle">
+                                                                            <span className="font-black text-white block text-sm tracking-wide">{ticket.id}</span>
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
 
-                                                                        {/* 2. CUSTOMER INFO: Name + Dial Mobile */}
-                                                                        <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-bold text-white block text-base">{ticket.customer}</span>
+                                                                        {/* 2. CUSTOMER INFO: Name + Dial Link Only */}
+                                                                        <td className="py-4 px-5 align-middle">
+                                                                            <span className="font-bold text-white block text-sm leading-tight">{ticket.customer}</span>
                                                                             {ticket.mobile && (
-                                                                                <a href={`tel:${ticket.mobile}`} className="text-yellow-400 hover:text-yellow-300 text-xs font-bold flex items-center gap-1.5 mt-1 bg-yellow-400/10 px-2.5 py-1 rounded-lg w-fit border border-yellow-400/20">
-                                                                                    <i className="fas fa-phone-alt text-[10px]"></i> {ticket.mobile}
+                                                                                <a href={`tel:${ticket.mobile}`} className="inline-flex items-center gap-1.5 mt-1 text-xs font-bold text-yellow-400 hover:text-yellow-300 bg-yellow-400/10 px-2 py-0.5 rounded-md border border-yellow-400/20">
+                                                                                    <i className="fas fa-phone-alt text-[9px]"></i> {ticket.mobile}
                                                                                 </a>
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 3. DEVICE & REMARKS: Model + Remarks */}
-                                                                        <td className="py-4 px-6 align-middle">
-                                                                            <span className="font-bold text-zinc-200 block text-sm">{ticket.device}</span>
+                                                                        {/* 3. DEVICE & REMARKS: Model + Issue/Notes Only */}
+                                                                        <td className="py-4 px-5 align-middle">
+                                                                            <span className="font-bold text-zinc-100 block text-sm">{ticket.device}</span>
                                                                             {ticket.remarks && (
-                                                                                <span className="text-zinc-400 italic text-xs block truncate max-w-xs mt-0.5" title={ticket.remarks}>
+                                                                                <span className="text-zinc-400 italic text-xs block truncate max-w-sm mt-0.5" title={ticket.remarks}>
                                                                                     "{ticket.remarks}"
                                                                                 </span>
                                                                             )}
                                                                         </td>
 
                                                                         {/* 4. STATUS */}
-                                                                        <td className="py-4 px-6 align-middle">
+                                                                        <td className="py-4 px-5 align-middle text-center">
                                                                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${getStatusBadge(ticket.status)}`}>
                                                                                 {ticket.status}
                                                                             </span>
                                                                         </td>
 
-                                                                        {/* 5. COST (INR) */}
-                                                                        <td className="py-4 px-6 align-middle font-extrabold text-white text-base">
-                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal text-sm">Pending</span>}
+                                                                        {/* 5. COST */}
+                                                                        <td className="py-4 px-5 align-middle font-extrabold text-white text-right text-sm">
+                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal">Pending</span>}
                                                                         </td>
 
                                                                         {/* 6. ACTIONS */}
-                                                                        <td className="py-4 px-6 align-middle text-right">
-                                                                            <div className="flex items-center justify-end gap-2">
+                                                                        <td className="py-4 px-5 align-middle text-right">
+                                                                            <div className="flex items-center justify-end gap-1.5">
                                                                                 <button 
                                                                                     onClick={() => startEditingTicket(ticket.id, ticket)} 
-                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10"
+                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10"
                                                                                     title="Edit Ticket"
                                                                                 >
-                                                                                    <i className="fas fa-pen text-[10px]"></i> Edit
+                                                                                    <i className="fas fa-pen text-[9px]"></i> Edit
                                                                                 </button>
                                                                                 <button 
                                                                                     onClick={() => sendCustomerNotification(ticket, ticket.id)} 
-                                                                                    className="bg-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-[#25d366]/30"
+                                                                                    className="bg-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-[#25d366]/30"
                                                                                     title="Send WhatsApp Update"
                                                                                 >
                                                                                     <i className="fab fa-whatsapp text-xs"></i> Notify
@@ -1243,7 +1186,7 @@
                                             type="text" 
                                             value={newTicketForm.issue} 
                                             onChange={e => setNewTicketForm({ ...newTicketForm, issue: e.target.value })} 
-                                            placeholder="e.g. No power / Motherboard short" 
+                                            placeholder="e.g. No Power MB Issue" 
                                             className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                         />
                                     </div>
