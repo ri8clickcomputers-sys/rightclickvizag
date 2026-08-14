@@ -40,7 +40,11 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
 
-        const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxVemzlfo2MEBg45kAyWRIPxbHfor9MokQ7RZJAtf-GsCVbBNs6BIHZql-4QM_S8eeV/exec"; 
+        // ==========================================
+        // 🚀 LIVE GOOGLE SHEETS DEPLOYMENT (VERSION 21)
+        // ==========================================
+        const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxeb2y-95Rd1Mrs2267eoZhyauEtsRMUcdHi0xwwwFMD2YZeFVB7F8RsJMWIZcAi71X/exec"; 
+        // ==========================================
 
         const PRODUCTS = [
             { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
@@ -82,13 +86,10 @@
             return `${year}-${month}-${day}`;
         };
 
-        // --- BULLETPROOF FIELD ISOLATOR ---
+        // --- DIRECT FIELD MAPPER ---
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
-                return {
-                    customer: "Customer Name", mobile: "", device: "Device Model",
-                    issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null
-                };
+                return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
             }
 
             let customer = "";
@@ -110,7 +111,7 @@
                 status = ticket ? String(ticket).trim() : "Received";
                 date = ticket ? String(ticket).trim() : "";
                 cost = ticket ? String(ticket).trim() : "Pending";
-                deliveredAt = ticket[9] || null;
+                deliveredAt = ticket || null;
             } else {
                 customer = ticket.customer !== undefined && ticket.customer !== null ? String(ticket.customer).trim() : "";
                 mobile = ticket.mobile !== undefined && ticket.mobile !== null ? String(ticket.mobile).trim() : "";
@@ -123,49 +124,29 @@
                 deliveredAt = ticket.deliveredAt || null;
             }
 
-            // If any field contains a full comma-separated row string, isolate every field explicitly
-            const rowString = (customer.includes(",") && /^RC\d+/i.test(customer)) ? customer 
-                            : ((device.includes(",") && /^RC\d+/i.test(device)) ? device 
-                            : ((issue.includes(",") && /^RC\d+/i.test(issue)) ? issue : ""));
-
-            if (rowString) {
-                const p = rowString.split(",").map(s => String(s).trim());
-                if (p.length >= 4) {
-                    customer = p || "";
-                    mobile = p || "";
-                    device = p || "";
-                    issue = p || "";
-                    remarks = p || "";
-                    status = p || "Received";
-                    date = p || "";
-                    cost = p || "Pending";
-                    if (p[9]) deliveredAt = p[9];
-                }
-            }
-
-            // Customer Name Clean
+            // Clean Customer
             customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
-            // Mobile Clean (strictly 10 digits)
+            // Clean Mobile (10 digits)
             let cleanMobile = String(mobile).replace(/\D/g, '');
             if (cleanMobile.length > 10) {
                 cleanMobile = cleanMobile.slice(-10);
             }
 
-            // Device Clean
+            // Clean Device
             device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
-            // Status Enum Clean
+            // Clean Status
             const validStatuses = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
             let cleanStatus = "Received";
             for (const st of validStatuses) {
-                if (String(status).toLowerCase().includes(st.toLowerCase())) {
+                if (String(status).toLowerCase() === st.toLowerCase()) {
                     cleanStatus = st;
                     break;
                 }
             }
 
-            // Cost Clean
+            // Clean Cost
             let cleanCost = String(cost).trim();
             if (!cleanCost || cleanCost.toLowerCase() === "pending") {
                 cleanCost = "Pending";
@@ -280,8 +261,9 @@
                     });
             };
 
+            // Force cache wipe on mount to immediately load version 21
             useEffect(() => {
-                localStorage.removeItem("rightclick_tickets"); // Clear corrupt cache
+                localStorage.removeItem("rightclick_tickets");
                 fetchCloudData(false);
             }, []);
 
@@ -601,7 +583,7 @@
                         </div>
                     </nav>
 
-                    {/* Mobile Drawer */}
+                    {/* Mobile Menu */}
                     {isMobileMenuOpen && (
                         <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
                             <div className="flex flex-col gap-3">
