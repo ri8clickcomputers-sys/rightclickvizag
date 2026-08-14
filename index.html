@@ -82,9 +82,13 @@
             return `${year}-${month}-${day}`;
         };
 
+        // --- BULLETPROOF FIELD ISOLATOR ---
         const parseTicketFields = (ticket) => {
-            if (!ticket) {
-                return { customer: "", mobile: "", device: "", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
+            if (!ticket || typeof ticket !== 'object') {
+                return {
+                    customer: "Customer Name", mobile: "", device: "Device Model",
+                    issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null
+                };
             }
 
             let customer = "";
@@ -98,44 +102,84 @@
             let deliveredAt = null;
 
             if (Array.isArray(ticket)) {
-                customer = ticket || ticket[0] || "";
-                mobile = ticket || "";
-                device = ticket || "";
-                issue = ticket || "";
-                remarks = ticket || "";
-                status = ticket || "Received";
-                date = ticket[7] || "";
-                cost = ticket[8] || "Pending";
+                customer = ticket ? String(ticket).trim() : "";
+                mobile = ticket ? String(ticket).trim() : "";
+                device = ticket ? String(ticket).trim() : "";
+                issue = ticket ? String(ticket).trim() : "";
+                remarks = ticket ? String(ticket).trim() : "";
+                status = ticket ? String(ticket).trim() : "Received";
+                date = ticket ? String(ticket).trim() : "";
+                cost = ticket ? String(ticket).trim() : "Pending";
                 deliveredAt = ticket[9] || null;
-            } else if (typeof ticket === 'object') {
-                customer = ticket.customer ? String(ticket.customer).trim() : "";
-                mobile = ticket.mobile ? String(ticket.mobile).trim() : "";
-                device = ticket.device ? String(ticket.device).trim() : "";
-                issue = ticket.issue ? String(ticket.issue).trim() : "";
-                remarks = ticket.remarks ? String(ticket.remarks).trim() : "";
-                status = ticket.status ? String(ticket.status).trim() : "Received";
-                date = ticket.date ? String(ticket.date).trim() : "";
-                cost = ticket.cost ? String(ticket.cost).trim() : "Pending";
+            } else {
+                customer = ticket.customer !== undefined && ticket.customer !== null ? String(ticket.customer).trim() : "";
+                mobile = ticket.mobile !== undefined && ticket.mobile !== null ? String(ticket.mobile).trim() : "";
+                device = ticket.device !== undefined && ticket.device !== null ? String(ticket.device).trim() : "";
+                issue = ticket.issue !== undefined && ticket.issue !== null ? String(ticket.issue).trim() : "";
+                remarks = ticket.remarks !== undefined && ticket.remarks !== null ? String(ticket.remarks).trim() : "";
+                status = ticket.status !== undefined && ticket.status !== null ? String(ticket.status).trim() : "Received";
+                date = ticket.date !== undefined && ticket.date !== null ? String(ticket.date).trim() : "";
+                cost = ticket.cost !== undefined && ticket.cost !== null ? String(ticket.cost).trim() : "Pending";
                 deliveredAt = ticket.deliveredAt || null;
             }
 
-            customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
-            device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+            // If any field contains a full comma-separated row string, isolate every field explicitly
+            const rowString = (customer.includes(",") && /^RC\d+/i.test(customer)) ? customer 
+                            : ((device.includes(",") && /^RC\d+/i.test(device)) ? device 
+                            : ((issue.includes(",") && /^RC\d+/i.test(issue)) ? issue : ""));
 
+            if (rowString) {
+                const p = rowString.split(",").map(s => String(s).trim());
+                if (p.length >= 4) {
+                    customer = p || "";
+                    mobile = p || "";
+                    device = p || "";
+                    issue = p || "";
+                    remarks = p || "";
+                    status = p || "Received";
+                    date = p || "";
+                    cost = p || "Pending";
+                    if (p[9]) deliveredAt = p[9];
+                }
+            }
+
+            // Customer Name Clean
+            customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+
+            // Mobile Clean (strictly 10 digits)
             let cleanMobile = String(mobile).replace(/\D/g, '');
             if (cleanMobile.length > 10) {
                 cleanMobile = cleanMobile.slice(-10);
+            }
+
+            // Device Clean
+            device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
+
+            // Status Enum Clean
+            const validStatuses = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
+            let cleanStatus = "Received";
+            for (const st of validStatuses) {
+                if (String(status).toLowerCase().includes(st.toLowerCase())) {
+                    cleanStatus = st;
+                    break;
+                }
+            }
+
+            // Cost Clean
+            let cleanCost = String(cost).trim();
+            if (!cleanCost || cleanCost.toLowerCase() === "pending") {
+                cleanCost = "Pending";
             }
 
             return {
                 customer: customer || "Customer Name",
                 mobile: cleanMobile || String(mobile),
                 device: device || "Device Model",
-                issue: issue || "",
-                remarks: remarks || "",
-                status: status || "Received",
-                date: date || "",
-                cost: cost || "Pending",
+                issue: String(issue || ""),
+                remarks: String(remarks || ""),
+                status: cleanStatus,
+                date: String(date || ""),
+                cost: cleanCost,
                 deliveredAt: deliveredAt || null
             };
         };
@@ -237,7 +281,7 @@
             };
 
             useEffect(() => {
-                localStorage.removeItem("rightclick_tickets");
+                localStorage.removeItem("rightclick_tickets"); // Clear corrupt cache
                 fetchCloudData(false);
             }, []);
 
@@ -903,7 +947,7 @@
                                             </div>
                                         </div>
 
-                                        {/* TIGHT, WELL-PROPORTIONED TABLE */}
+                                        {/* WELL-PROPORTIONED TABLE */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left border-collapse table-auto">
@@ -1006,7 +1050,7 @@
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
 
-                                                                        {/* 2. CUSTOMER INFO */}
+                                                                        {/* 2. CUSTOMER INFO: Name + Dial Link Only */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-white block text-sm leading-tight">{ticket.customer}</span>
                                                                             {ticket.mobile && (
@@ -1016,7 +1060,7 @@
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 3. DEVICE & REMARKS */}
+                                                                        {/* 3. DEVICE & REMARKS: Model + Issue/Notes Only */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-zinc-100 block text-sm">{ticket.device}</span>
                                                                             {ticket.remarks && (
@@ -1190,7 +1234,7 @@
                         </div>
                     )}
 
-                    {/* Footer with Discreet Staff Portal Link */}
+                    {/* Footer */}
                     <footer className="bg-black border-t border-white/10 mt-auto py-12">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
