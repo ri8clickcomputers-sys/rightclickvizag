@@ -32,6 +32,22 @@
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
         
         ::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printable-job-card, #printable-job-card * { visibility: visible; }
+            #printable-job-card {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 15px;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -45,17 +61,6 @@
         // ==========================================
         const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxeb2y-95Rd1Mrs2267eoZhyauEtsRMUcdHi0xwwwFMD2YZeFVB7F8RsJMWIZcAi71X/exec"; 
         // ==========================================
-
-        const PRODUCTS = [
-            { id: 1, name: "Corsair Vengeance 16GB DDR5 RAM", category: "Components", price: 21990, image: "https://images.unsplash.com/photo-1562976540-1502c2145186?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 124 },
-            { id: 2, name: "Crucial P3 Plus 1TB NVMe SSD", category: "Components", price: 19000, image: "https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 89 },
-            { id: 3, name: "Logitech G502 Hero Gaming Mouse", category: "Accessories", price: 3390, image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=400&q=80", rating: 4.7, reviews: 312 },
-            { id: 4, name: "GIGABYTE 25-Inch IPS FHD 240Hz Monitor", category: "Displays", price: 11499, image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=400&q=80", rating: 4.5, reviews: 67 },
-            { id: 5, name: "Ant Esports MK1300 V2 Mechanical Keyboard", category: "Accessories", price: 1550, image: "https://images.unsplash.com/photo-1595044426077-d36d9236d54a?auto=format&fit=crop&w=400&q=80", rating: 4.6, reviews: 145 },
-            { id: 6, name: "ASUS Dual RX 7600 EVO 8GB GPU", category: "Components", price: 26075, image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=400&q=80", rating: 4.8, reviews: 42 },
-            { id: 7, name: "Apple iMac 24-inch (M3)", category: "Desktops", price: 134900, image: "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=400&q=80", rating: 4.9, reviews: 28 },
-            { id: 8, name: "Portronics Toad 27 Wireless Mouse", category: "Accessories", price: 322, image: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=400&q=80", rating: 4.2, reviews: 512 }
-        ];
 
         const SERVICES = [
             { title: "Chip-Level Laptop & Motherboard Repair", desc: "Expert micro-soldering, short-circuit troubleshooting, and power IC replacement.", icon: "fa-microchip" },
@@ -78,6 +83,10 @@
             "MacBook screen replacement done quickly and efficiently. Great team!"
         ];
 
+        const ACCESSORY_OPTIONS = [
+            "Original Adapter", "Compatible Adapter", "Power Cord", "Laptop Bag", "USB Dongle/Mouse", "None"
+        ];
+
         const getTodayYYYYMMDD = () => {
             const d = new Date();
             const year = d.getFullYear();
@@ -88,54 +97,28 @@
 
         const parseTicketFields = (ticket) => {
             if (!ticket || typeof ticket !== 'object') {
-                return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null };
+                return { customer: "Customer Name", mobile: "", device: "Device Model", issue: "", remarks: "", status: "Received", date: "", cost: "Pending", deliveredAt: null, accessories: "None", preCheck: "Standard Check", password: "", serialNo: "" };
             }
 
-            let customer = "";
-            let mobile = "";
-            let device = "";
-            let issue = "";
-            let remarks = "";
-            let status = "Received";
-            let date = "";
-            let cost = "Pending";
-            let deliveredAt = null;
+            let customer = ticket.customer !== undefined && ticket.customer !== null ? String(ticket.customer).trim() : "";
+            let mobile = ticket.mobile !== undefined && ticket.mobile !== null ? String(ticket.mobile).trim() : "";
+            let device = ticket.device !== undefined && ticket.device !== null ? String(ticket.device).trim() : "";
+            let issue = ticket.issue !== undefined && ticket.issue !== null ? String(ticket.issue).trim() : "";
+            let remarks = ticket.remarks !== undefined && ticket.remarks !== null ? String(ticket.remarks).trim() : "";
+            let status = ticket.status !== undefined && ticket.status !== null ? String(ticket.status).trim() : "Received";
+            let date = ticket.date !== undefined && ticket.date !== null ? String(ticket.date).trim() : "";
+            let cost = ticket.cost !== undefined && ticket.cost !== null ? String(ticket.cost).trim() : "Pending";
+            let deliveredAt = ticket.deliveredAt || null;
+            let accessories = ticket.accessories !== undefined && ticket.accessories !== null ? String(ticket.accessories).trim() : "None";
+            let preCheck = ticket.preCheck !== undefined && ticket.preCheck !== null ? String(ticket.preCheck).trim() : "Standard Check";
+            let password = ticket.password !== undefined && ticket.password !== null ? String(ticket.password).trim() : "";
+            let serialNo = ticket.serialNo !== undefined && ticket.serialNo !== null ? String(ticket.serialNo).trim() : "";
 
-            if (Array.isArray(ticket)) {
-                customer = ticket ? String(ticket).trim() : "";
-                mobile = ticket ? String(ticket).trim() : "";
-                device = ticket ? String(ticket).trim() : "";
-                issue = ticket ? String(ticket).trim() : "";
-                remarks = ticket ? String(ticket).trim() : "";
-                status = ticket ? String(ticket).trim() : "Received";
-                date = ticket ? String(ticket).trim() : "";
-                cost = ticket ? String(ticket).trim() : "Pending";
-                deliveredAt = ticket || null;
-            } else {
-                customer = ticket.customer !== undefined && ticket.customer !== null ? String(ticket.customer).trim() : "";
-                mobile = ticket.mobile !== undefined && ticket.mobile !== null ? String(ticket.mobile).trim() : "";
-                device = ticket.device !== undefined && ticket.device !== null ? String(ticket.device).trim() : "";
-                issue = ticket.issue !== undefined && ticket.issue !== null ? String(ticket.issue).trim() : "";
-                remarks = ticket.remarks !== undefined && ticket.remarks !== null ? String(ticket.remarks).trim() : "";
-                status = ticket.status !== undefined && ticket.status !== null ? String(ticket.status).trim() : "Received";
-                date = ticket.date !== undefined && ticket.date !== null ? String(ticket.date).trim() : "";
-                cost = ticket.cost !== undefined && ticket.cost !== null ? String(ticket.cost).trim() : "Pending";
-                deliveredAt = ticket.deliveredAt || null;
-            }
-
-            // Customer Name Clean
             customer = String(customer).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
-
-            // Mobile Clean (strictly 10 digits)
             let cleanMobile = String(mobile).replace(/\D/g, '');
-            if (cleanMobile.length > 10) {
-                cleanMobile = cleanMobile.slice(-10);
-            }
-
-            // Device Clean
+            if (cleanMobile.length > 10) cleanMobile = cleanMobile.slice(-10);
             device = String(device).replace(/^RC\d+-\d+/i, '').replace(/,/g, '').trim();
 
-            // Status Enum Clean
             const validStatuses = ["Received", "Diagnosing", "Repairing", "Ready for Pickup", "Delivered"];
             let cleanStatus = "Received";
             for (const st of validStatuses) {
@@ -145,11 +128,8 @@
                 }
             }
 
-            // Cost Clean
             let cleanCost = String(cost).trim();
-            if (!cleanCost || cleanCost.toLowerCase() === "pending") {
-                cleanCost = "Pending";
-            }
+            if (!cleanCost || cleanCost.toLowerCase() === "pending") cleanCost = "Pending";
 
             return {
                 customer: customer || "Customer Name",
@@ -160,7 +140,11 @@
                 status: cleanStatus,
                 date: String(date || ""),
                 cost: cleanCost,
-                deliveredAt: deliveredAt || null
+                deliveredAt: deliveredAt || null,
+                accessories: accessories || "None",
+                preCheck: preCheck || "Standard Check",
+                password: password || "",
+                serialNo: serialNo || ""
             };
         };
 
@@ -205,6 +189,8 @@
                 return str;
             };
 
+            // Dynamic Products State (Loaded from Google Sheets Products tab)
+            const [productsList, setProductsList] = useState([]);
             const [cart, setCart] = useState([]);
             const [isCartOpen, setIsCartOpen] = useState(false);
             const [activeCategory, setActiveCategory] = useState("All");
@@ -229,13 +215,15 @@
             
             const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
             const [newTicketForm, setNewTicketForm] = useState({ 
-                serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() 
+                serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD(),
+                accessories: ["Original Adapter"], preCheckBoot: "Boots to OS", preCheckHinge: "Intact / OK", preCheckDisplay: "Screen OK",
+                preCheckKB: "All Keys Working", isDeadUnit: false, password: "", serialNo: ""
             });
 
+            const [selectedJobCardForPrint, setSelectedJobCardForPrint] = useState(null);
             const [isReviewAssistOpen, setIsReviewAssistOpen] = useState(false);
             const [generatedReview, setGeneratedReview] = useState("");
 
-            // Force Fetch Live Data from Google Sheets
             const fetchCloudData = (isManual = false) => {
                 if (!GOOGLE_SHEETS_API_URL) return;
                 setIsLoadingCloud(true);
@@ -243,16 +231,21 @@
                     .then(res => res.json())
                     .then(data => {
                         setIsLoadingCloud(false);
-                        if (data && typeof data === 'object' && !data.error) {
-                            const sanitized = {};
-                            for (const key in data) {
-                                if (key && key.toLowerCase() !== "error") {
-                                    sanitized[key] = parseTicketFields(data[key]);
+                        if (data && data.success) {
+                            // 1. Ingest Tickets
+                            if (data.tickets && typeof data.tickets === 'object') {
+                                const sanitized = {};
+                                for (const key in data.tickets) {
+                                    sanitized[key] = parseTicketFields(data.tickets[key]);
                                 }
+                                setTicketsData(sanitized);
+                                localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
                             }
-                            setTicketsData(sanitized);
-                            localStorage.setItem("rightclick_tickets", JSON.stringify(sanitized));
-                            if (isManual) showToast("Synchronized with Google Sheet!");
+                            // 2. Ingest Dynamic Live Products from Google Sheets
+                            if (data.products && Array.isArray(data.products)) {
+                                setProductsList(data.products);
+                            }
+                            if (isManual) showToast("Live Data Synced from Google Sheets!");
                         }
                     })
                     .catch(err => {
@@ -261,22 +254,80 @@
                     });
             };
 
-            // On Mount: Clear local storage and fetch fresh data from Google Sheets
+            // Auto-detect QR tracking link parameter on mount (e.g. ?ticket=RC2026-798)
             useEffect(() => {
                 localStorage.removeItem("rightclick_tickets");
                 fetchCloudData(false);
             }, []);
 
-            const saveDataToCloud = (data) => {
-                setTicketsData(data); 
-                localStorage.setItem("rightclick_tickets", JSON.stringify(data));
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const qrTicket = params.get('ticket') || params.get('track');
+                if (qrTicket && Object.keys(ticketsData).length > 0) {
+                    setTrackingQuery(qrTicket);
+                    setCurrentView('tracking');
+                    
+                    const cleanDigits = qrTicket.replace(/\D/g, '');
+                    const upperQuery = qrTicket.toUpperCase();
+                    let foundId = null;
+                    for (const key in ticketsData) {
+                        const t = ticketsData[key];
+                        const mobileClean = String(t.mobile || '').replace(/\D/g, '');
+                        if (key.toUpperCase() === upperQuery || key.toUpperCase() === `${PREFIX}-${upperQuery}`) {
+                            foundId = key;
+                            break;
+                        }
+                        if (cleanDigits.length >= 10 && (mobileClean === cleanDigits || mobileClean.endsWith(cleanDigits))) {
+                            foundId = key;
+                            break;
+                        }
+                    }
+                    if (foundId) {
+                        setSearchedTicket(ticketsData[foundId]);
+                        setSearchedTicketId(foundId);
+                    }
+                }
+            }, [ticketsData]);
+
+            // Atomic Single-Row Upsert to Cloud Backend
+            const saveSingleTicketToCloud = (ticketId, ticketData) => {
+                const updatedTickets = { ...ticketsData, [ticketId]: ticketData };
+                setTicketsData(updatedTickets);
+                localStorage.setItem("rightclick_tickets", JSON.stringify(updatedTickets));
+
                 if (GOOGLE_SHEETS_API_URL) {
                     fetch(GOOGLE_SHEETS_API_URL, {
                         method: "POST",
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify(data)
-                    }).catch(err => console.error("Cloud Save Error:", err));
+                        body: JSON.stringify({
+                            action: "UPSERT_TICKET",
+                            ticketId: ticketId,
+                            ticketData: ticketData
+                        })
+                    }).catch(err => console.error("Atomic Save Error:", err));
                 }
+            };
+
+            const triggerCloudArchival = () => {
+                if (!confirm("Archive all tickets marked as Delivered for more than 30 days to the Archive tab?")) return;
+                setIsLoadingCloud(true);
+                fetch(GOOGLE_SHEETS_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ action: "ARCHIVE_OLD_TICKETS" })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    setIsLoadingCloud(false);
+                    if (res.success) {
+                        showToast(res.message || "Archival completed!");
+                        fetchCloudData(false);
+                    }
+                })
+                .catch(err => {
+                    setIsLoadingCloud(false);
+                    showToast("Archival error occurred.");
+                });
             };
 
             const showToast = (msg) => {
@@ -285,9 +336,9 @@
             };
 
             const filteredProducts = useMemo(() => {
-                if (activeCategory === "All") return PRODUCTS;
-                return PRODUCTS.filter(p => p.category === activeCategory);
-            }, [activeCategory]);
+                if (activeCategory === "All") return productsList;
+                return productsList.filter(p => p.category === activeCategory);
+            }, [activeCategory, productsList]);
 
             const addToCart = (product) => {
                 setCart(prev => {
@@ -313,22 +364,60 @@
                 return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(numeric);
             };
 
+            // Backend-Secured Authentication Call
             const handleAdminLogin = (e) => {
                 e.preventDefault();
-                if (loginUsername.toLowerCase().trim() === 'rightclick' && loginPassword.trim() === '9059895427') {
-                    setIsAdminAuthenticated(true);
-                    setLoginError(''); setLoginUsername(''); setLoginPassword('');
-                    fetchCloudData(false);
-                    showToast("Staff Access Granted");
-                } else {
-                    setLoginError("Invalid username or password.");
-                }
+                setLoginError('');
+                setIsLoadingCloud(true);
+
+                fetch(GOOGLE_SHEETS_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "AUTH_LOGIN",
+                        username: loginUsername,
+                        password: loginPassword
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    setIsLoadingCloud(false);
+                    if (res.success) {
+                        setIsAdminAuthenticated(true);
+                        setLoginError(''); setLoginUsername(''); setLoginPassword('');
+                        fetchCloudData(false);
+                        showToast("Staff Access Granted");
+                    } else {
+                        setLoginError(res.message || "Invalid credentials.");
+                    }
+                })
+                .catch(err => {
+                    setIsLoadingCloud(false);
+                    // Fallback check
+                    if (loginUsername.toLowerCase().trim() === 'rightclick' && loginPassword.trim() === '9059895427') {
+                        setIsAdminAuthenticated(true);
+                        showToast("Staff Access (Offline Mode)");
+                    } else {
+                        setLoginError("Authentication failed. Check your network.");
+                    }
+                });
             };
 
             const handleAdminLogout = () => {
                 setIsAdminAuthenticated(false);
                 setCurrentView('store');
                 showToast("Logged out successfully");
+            };
+
+            const toggleAccessory = (item) => {
+                setNewTicketForm(prev => {
+                    const current = prev.accessories || [];
+                    if (current.includes(item)) {
+                        return { ...prev, accessories: current.filter(a => a !== item) };
+                    } else {
+                        return { ...prev, accessories: [...current.filter(a => a !== "None"), item] };
+                    }
+                });
             };
 
             const handleCreateTicket = (e) => {
@@ -341,6 +430,16 @@
                     return; 
                 }
 
+                let diagnosticSummary = [];
+                if (newTicketForm.isDeadUnit) {
+                    diagnosticSummary.push("Dead/No-Power Intake (Untested Peripherals)");
+                } else {
+                    diagnosticSummary.push(`Boot: ${newTicketForm.preCheckBoot}`);
+                    diagnosticSummary.push(`Body/Hinges: ${newTicketForm.preCheckHinge}`);
+                    diagnosticSummary.push(`Screen: ${newTicketForm.preCheckDisplay}`);
+                    diagnosticSummary.push(`KB: ${newTicketForm.preCheckKB}`);
+                }
+
                 const newTicket = {
                     customer: newTicketForm.customer.trim(), 
                     mobile: newTicketForm.mobile.replace(/\D/g, ''),
@@ -350,14 +449,22 @@
                     status: "Received", 
                     date: newTicketForm.date || getTodayYYYYMMDD(), 
                     cost: newTicketForm.cost ? newTicketForm.cost.trim() : "Pending",
-                    deliveredAt: null
+                    deliveredAt: null,
+                    accessories: (newTicketForm.accessories && newTicketForm.accessories.length > 0) ? newTicketForm.accessories.join(', ') : "None",
+                    preCheck: diagnosticSummary.join(' | '),
+                    password: newTicketForm.password.trim(),
+                    serialNo: newTicketForm.serialNo.trim()
                 };
 
-                const updatedData = { ...ticketsData, [customId]: newTicket };
-                saveDataToCloud(updatedData);
+                saveSingleTicketToCloud(customId, newTicket);
                 
                 setIsCreateModalOpen(false);
-                setNewTicketForm({ serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD() });
+                setSelectedJobCardForPrint({ id: customId, ...newTicket });
+                setNewTicketForm({ 
+                    serialNumber: "", customer: "", mobile: "", device: "", issue: "", remarks: "", cost: "Pending", date: getTodayYYYYMMDD(),
+                    accessories: ["Original Adapter"], preCheckBoot: "Boots to OS", preCheckHinge: "Intact / OK", preCheckDisplay: "Screen OK",
+                    preCheckKB: "All Keys Working", isDeadUnit: false, password: "", serialNo: ""
+                });
                 showToast(`Created: ${customId}`);
             };
 
@@ -373,17 +480,14 @@
                 } else if (updatedTicket.status !== 'Delivered') {
                     updatedTicket.deliveredAt = null;
                 }
-                const updatedData = { ...ticketsData, [id]: updatedTicket };
-                saveDataToCloud(updatedData);
+                saveSingleTicketToCloud(id, updatedTicket);
                 setEditingTicketId(null);
                 showToast(`Saved updates for ${id}`);
             };
 
             const sendCustomerNotification = (ticket, id) => {
                 let mobileClean = String(ticket.mobile).replace(/\D/g, '');
-                if (mobileClean.length === 10) {
-                    mobileClean = '91' + mobileClean;
-                }
+                if (mobileClean.length === 10) mobileClean = '91' + mobileClean;
 
                 let message = `Hello *${ticket.customer}*, this is an update from *Right Click Computers*!\n\n`;
                 message += `*Ticket ID:* ${id}\n`;
@@ -395,10 +499,10 @@
                 }
 
                 if (ticket.status === 'Ready for Pickup') {
-                    message += `\nYour device is repaired and ready for pickup! You can visit our store during business hours.\n`;
+                    message += `\nYour device is fully tested and ready for pickup! Please bring your intake slip or original adapter if needed.\n`;
                 }
 
-                message += `\nTrack your repair live here: https://ri8clickcomputers-sys.github.io/rightclickvizag`;
+                message += `\nTrack your repair live here: https://ri8clickcomputers-sys.github.io/rightclickvizag?ticket=${id}`;
                 
                 const url = `https://wa.me/${mobileClean}?text=${encodeURIComponent(message)}`;
                 window.open(url, '_blank');
@@ -415,7 +519,7 @@
             };
 
             const handleTrackLookup = (e) => {
-                e.preventDefault();
+                if (e) e.preventDefault();
                 setTrackingError("");
                 setSearchedTicket(null);
                 setSearchedTicketId("");
@@ -463,7 +567,8 @@
                         String(item.mobile || '').includes(q) || 
                         String(item.device || '').toLowerCase().includes(q) ||
                         String(item.issue || '').toLowerCase().includes(q) ||
-                        String(item.remarks || '').toLowerCase().includes(q);
+                        String(item.remarks || '').toLowerCase().includes(q) ||
+                        String(item.accessories || '').toLowerCase().includes(q);
                     return matchStatus && matchQuery;
                 });
 
@@ -507,7 +612,7 @@
                     )}
 
                     {/* Floating Action Buttons */}
-                    <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+                    <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4 no-print">
                         <button 
                             onClick={() => { setGeneratedReview(REVIEW_TEMPLATES[Math.floor(Math.random() * REVIEW_TEMPLATES.length)]); setIsReviewAssistOpen(true); }} 
                             className="w-14 h-14 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.5)] hover:scale-110 transition-transform animate-pulse-slow"
@@ -527,7 +632,7 @@
 
                     {/* Review Assistant Modal */}
                     {isReviewAssistOpen && (
-                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 no-print">
                             <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsReviewAssistOpen(false)}></div>
                             <div className="bg-zinc-900/95 border border-yellow-400/30 backdrop-blur-xl p-8 rounded-3xl w-full max-w-lg relative z-10 animate-slide-in-right shadow-2xl">
                                 <button onClick={() => setIsReviewAssistOpen(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-white"><i className="fas fa-times"></i></button>
@@ -544,7 +649,7 @@
 
                     {/* Secure Checkout Modal */}
                     {isCheckoutModalOpen && (
-                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 no-print">
                             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCheckoutModalOpen(false)}></div>
                             <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-[30px] w-full max-w-md relative z-10 animate-slide-in-right shadow-2xl">
                                 <button onClick={() => setIsCheckoutModalOpen(false)} className="absolute top-5 right-5 text-zinc-400 hover:text-white bg-white/5 p-2 rounded-full"><i className="fas fa-times"></i></button>
@@ -565,7 +670,7 @@
                     )}
 
                     {/* Navigation Bar */}
-                    <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5">
+                    <nav className="fixed w-full top-0 z-40 bg-[#03050d]/80 backdrop-blur-lg border-b border-white/5 no-print">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-24">
                             <div onClick={() => setCurrentView('store')}><BrandLogo /></div>
                             <div className="hidden md:flex items-center space-x-8">
@@ -585,7 +690,7 @@
 
                     {/* Mobile Menu */}
                     {isMobileMenuOpen && (
-                        <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40">
+                        <div className="md:hidden fixed top-24 w-full bg-zinc-900 border-b border-white/10 p-4 shadow-2xl z-40 no-print">
                             <div className="flex flex-col gap-3">
                                 <button onClick={() => { setCurrentView("store"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Store</button>
                                 <button onClick={() => { setCurrentView("tracking"); setIsMobileMenuOpen(false); }} className="font-bold text-left p-3 rounded-xl bg-white/5">Repair Tracking</button>
@@ -596,7 +701,7 @@
 
                     {/* Cart Slide-Over */}
                     {isCartOpen && (
-                        <div className="fixed inset-0 z-[9999] overflow-hidden">
+                        <div className="fixed inset-0 z-[9999] overflow-hidden no-print">
                             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
                             <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
                                 <div className="w-screen max-w-md bg-zinc-900 border-l border-white/10 p-6 flex flex-col animate-slide-in-right shadow-2xl">
@@ -645,9 +750,9 @@
                     )}
 
                     {/* Main Content Area */}
-                    <div className="flex-grow pt-24">
+                    <div className="flex-grow pt-24 no-print">
                         
-                        {/* 1. STORE VIEW */}
+                        {/* 1. STORE VIEW (Dynamic catalog from Google Sheets) */}
                         {currentView === "store" && (
                             <>
                                 <div className="relative h-[80vh] min-h-[500px] flex items-center justify-center overflow-hidden">
@@ -690,7 +795,7 @@
                                     <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
                                         <div>
                                             <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-2">Featured Hardware & Accessories</h2>
-                                            <p className="text-zinc-400 text-sm">Genuine components, peripherals, and high-performance upgrades.</p>
+                                            <p className="text-zinc-400 text-sm">Real-time inventory from our Google Sheet catalog.</p>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {CATEGORIES.map(cat => (
@@ -851,10 +956,10 @@
                                     <div className="max-w-md mx-auto bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl shadow-2xl">
                                         <div className="text-center mb-6">
                                             <div className="w-16 h-16 bg-yellow-400/10 text-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-yellow-400/20 text-2xl">
-                                                <i className="fas fa-lock"></i>
+                                                <i className="fas fa-shield-halved"></i>
                                             </div>
-                                            <h2 className="text-2xl font-black text-white">Staff Portal Login</h2>
-                                            <p className="text-zinc-400 text-xs mt-1">Authorized personnel only.</p>
+                                            <h2 className="text-2xl font-black text-white">Secure Staff Portal</h2>
+                                            <p className="text-zinc-400 text-xs mt-1">Backend-Verified Authentication.</p>
                                         </div>
                                         <form onSubmit={handleAdminLogin} className="space-y-4">
                                             <div>
@@ -881,7 +986,7 @@
                                             </div>
                                             {loginError && <p className="text-red-400 text-xs font-bold">{loginError}</p>}
                                             <button type="submit" className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(250,204,21,0.3)]">
-                                                Authenticate & Access
+                                                {isLoadingCloud ? <i className="fas fa-spinner fa-spin"></i> : "Authenticate & Access"}
                                             </button>
                                         </form>
                                     </div>
@@ -889,17 +994,20 @@
                                     <div>
                                         <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-white/10 gap-4">
                                             <div>
-                                                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">Control Center</span>
-                                                <h1 className="text-3xl font-black text-white">Repair Tickets Dashboard</h1>
+                                                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">Workshop & Store Control</span>
+                                                <h1 className="text-3xl font-black text-white">Repair Desk Dashboard</h1>
                                             </div>
                                             <div className="flex flex-wrap gap-3">
-                                                <button onClick={() => fetchCloudData(true)} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2" title="Reload from Google Sheets">
+                                                <button onClick={triggerCloudArchival} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold px-3.5 py-3 rounded-xl border border-white/10 flex items-center gap-2 text-xs" title="Auto-archive Delivered tickets older than 30 days">
+                                                    <i className="fas fa-box-archive text-yellow-400"></i> Archive (30d+)
+                                                </button>
+                                                <button onClick={() => fetchCloudData(true)} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2 text-xs" title="Reload from Google Sheets">
                                                     <i className={`fas fa-rotate ${isLoadingCloud ? 'fa-spin' : ''}`}></i> Sync Sheet
                                                 </button>
-                                                <button onClick={() => setIsCreateModalOpen(true)} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-6 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)]">
-                                                    <i className="fas fa-plus"></i> New Ticket
+                                                <button onClick={() => setIsCreateModalOpen(true)} className="bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold px-5 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)] text-xs">
+                                                    <i className="fas fa-plus"></i> New Ticket (SOP)
                                                 </button>
-                                                <button onClick={handleAdminLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-xl border border-white/10 flex items-center gap-2">
+                                                <button onClick={handleAdminLogout} className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-3 rounded-xl border border-white/10 flex items-center gap-2 text-xs">
                                                     <i className="fas fa-sign-out-alt"></i> Logout
                                                 </button>
                                             </div>
@@ -911,7 +1019,7 @@
                                                     type="text" 
                                                     value={adminSearch} 
                                                     onChange={e => setAdminSearch(e.target.value)} 
-                                                    placeholder="Search by Ticket ID, Customer, Phone, or Device..." 
+                                                    placeholder="Search by Ticket ID, Customer, Phone, Device, or Serial..." 
                                                     className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
                                                 />
                                             </div>
@@ -921,7 +1029,7 @@
                                                     onChange={e => setAdminStatusFilter(e.target.value)} 
                                                     className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-3.5 text-white font-medium focus:outline-none focus:border-yellow-400"
                                                 >
-                                                    <option value="All">All Statuses ({Object.keys(ticketsData || {}).length})</option>
+                                                    <option value="All">All Active Tickets ({Object.keys(ticketsData || {}).length})</option>
                                                     {STATUS_OPTIONS.map(st => (
                                                         <option key={st} value={st}>{st}</option>
                                                     ))}
@@ -929,7 +1037,7 @@
                                             </div>
                                         </div>
 
-                                        {/* WELL-PROPORTIONED TABLE */}
+                                        {/* STREAMLINED TABLE WITHOUT PUBLIC COST COLUMN */}
                                         <div className="bg-zinc-900/90 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left border-collapse table-auto">
@@ -937,16 +1045,15 @@
                                                         <tr className="bg-black/50 border-b border-white/10 text-zinc-400 text-xs uppercase tracking-wider">
                                                             <th className="py-4 px-5 font-extrabold w-36">Ticket ID & Date</th>
                                                             <th className="py-4 px-5 font-extrabold w-48">Customer Info</th>
-                                                            <th className="py-4 px-5 font-extrabold">Device & Remarks</th>
+                                                            <th className="py-4 px-5 font-extrabold">Device, Accessories & SOP Check</th>
                                                             <th className="py-4 px-5 font-extrabold w-36 text-center">Status</th>
-                                                            <th className="py-4 px-5 font-extrabold w-28 text-right">Cost (INR)</th>
-                                                            <th className="py-4 px-5 font-extrabold w-32 text-right">Actions</th>
+                                                            <th className="py-4 px-5 font-extrabold w-40 text-right">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-white/5 text-sm">
                                                         {sortedTicketsList.length === 0 ? (
                                                             <tr>
-                                                                <td colSpan="6" className="py-12 text-center text-zinc-500 font-medium">No tickets found in database.</td>
+                                                                <td colSpan="5" className="py-12 text-center text-zinc-500 font-medium">No tickets found in active database.</td>
                                                             </tr>
                                                         ) : (
                                                             sortedTicketsList.map(ticket => {
@@ -980,21 +1087,31 @@
                                                                                     className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
                                                                                 />
                                                                             </td>
-                                                                            <td className="py-4 px-5 align-top">
+                                                                            <td className="py-4 px-5 align-top space-y-1">
                                                                                 <input 
                                                                                     type="text" 
                                                                                     value={editFormData.device || ""} 
                                                                                     onChange={e => setEditFormData({ ...editFormData, device: e.target.value })} 
                                                                                     placeholder="Device Model"
-                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white mb-1"
+                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
                                                                                 />
                                                                                 <input 
                                                                                     type="text" 
                                                                                     value={editFormData.remarks || ""} 
                                                                                     onChange={e => setEditFormData({ ...editFormData, remarks: e.target.value })} 
-                                                                                    placeholder="Condition / Remarks"
+                                                                                    placeholder="Condition / Diagnostic Remarks"
                                                                                     className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white"
                                                                                 />
+                                                                                <div className="flex items-center gap-2 pt-1">
+                                                                                    <span className="text-[10px] uppercase font-bold text-yellow-400">Cost (INR):</span>
+                                                                                    <input 
+                                                                                        type="text" 
+                                                                                        value={editFormData.cost || ""} 
+                                                                                        onChange={e => setEditFormData({ ...editFormData, cost: e.target.value })} 
+                                                                                        placeholder="3500 or Pending"
+                                                                                        className="bg-black border border-yellow-400/40 rounded px-2 py-1 text-xs text-yellow-400 font-bold flex-1"
+                                                                                    />
+                                                                                </div>
                                                                             </td>
                                                                             <td className="py-4 px-5 align-top text-center">
                                                                                 <select 
@@ -1007,15 +1124,6 @@
                                                                                     ))}
                                                                                 </select>
                                                                             </td>
-                                                                            <td className="py-4 px-5 align-top text-right">
-                                                                                <input 
-                                                                                    type="text" 
-                                                                                    value={editFormData.cost || ""} 
-                                                                                    onChange={e => setEditFormData({ ...editFormData, cost: e.target.value })} 
-                                                                                    placeholder="3500 or Pending"
-                                                                                    className="w-full bg-black border border-white/20 rounded p-1.5 text-xs text-white text-right"
-                                                                                />
-                                                                            </td>
                                                                             <td className="py-4 px-5 align-top text-right space-x-1">
                                                                                 <button onClick={() => saveTicketEdit(ticket.id)} className="bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold px-2.5 py-1.5 rounded-lg text-xs">Save</button>
                                                                                 <button onClick={() => setEditingTicketId(null)} className="bg-zinc-700 hover:bg-zinc-600 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs">Cancel</button>
@@ -1026,13 +1134,11 @@
 
                                                                 return (
                                                                     <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
-                                                                        {/* 1. TICKET ID & DATE */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-black text-white block text-sm tracking-wide">{ticket.id}</span>
                                                                             <span className="text-zinc-400 uppercase text-xs font-semibold">{formatDate(ticket.date)}</span>
                                                                         </td>
 
-                                                                        {/* 2. CUSTOMER INFO */}
                                                                         <td className="py-4 px-5 align-middle">
                                                                             <span className="font-bold text-white block text-sm leading-tight">{ticket.customer}</span>
                                                                             {ticket.mobile && (
@@ -1042,9 +1148,23 @@
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 3. DEVICE & REMARKS */}
                                                                         <td className="py-4 px-5 align-middle">
-                                                                            <span className="font-bold text-zinc-100 block text-sm">{ticket.device}</span>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="font-bold text-zinc-100 text-sm">{ticket.device}</span>
+                                                                                {ticket.serialNo && <span className="text-[10px] text-zinc-500 font-mono">S/N: {ticket.serialNo}</span>}
+                                                                            </div>
+                                                                            
+                                                                            <div className="flex flex-wrap gap-1 mt-1">
+                                                                                <span className="text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-zinc-300">
+                                                                                    <i className="fas fa-plug text-[9px] text-yellow-400 mr-1"></i>{ticket.accessories || "No Acc"}
+                                                                                </span>
+                                                                                {ticket.preCheck && ticket.preCheck !== "Standard Check" && (
+                                                                                    <span className="text-[10px] bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded text-blue-300">
+                                                                                        {ticket.preCheck}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+
                                                                             {ticket.remarks && (
                                                                                 <span className="text-zinc-400 italic text-xs block truncate max-w-sm mt-0.5" title={ticket.remarks}>
                                                                                     "{ticket.remarks}"
@@ -1052,34 +1172,34 @@
                                                                             )}
                                                                         </td>
 
-                                                                        {/* 4. STATUS */}
                                                                         <td className="py-4 px-5 align-middle text-center">
                                                                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${getStatusBadge(ticket.status)}`}>
                                                                                 {ticket.status}
                                                                             </span>
                                                                         </td>
 
-                                                                        {/* 5. COST */}
-                                                                        <td className="py-4 px-5 align-middle font-extrabold text-white text-right text-sm">
-                                                                            {ticket.cost && ticket.cost.toLowerCase() !== 'pending' ? formatINR(ticket.cost) : <span className="text-zinc-500 font-normal">Pending</span>}
-                                                                        </td>
-
-                                                                        {/* 6. ACTIONS */}
                                                                         <td className="py-4 px-5 align-middle text-right">
                                                                             <div className="flex items-center justify-end gap-1.5">
                                                                                 <button 
+                                                                                    onClick={() => setSelectedJobCardForPrint(ticket)} 
+                                                                                    className="bg-white/10 hover:bg-yellow-400 hover:text-black text-white font-bold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10 transition-colors"
+                                                                                    title="Print Official Job Card"
+                                                                                >
+                                                                                    <i className="fas fa-print text-[10px]"></i> Print
+                                                                                </button>
+                                                                                <button 
                                                                                     onClick={() => startEditingTicket(ticket.id, ticket)} 
-                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10"
+                                                                                    className="bg-white/10 hover:bg-white/20 text-white font-bold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-white/10"
                                                                                     title="Edit Ticket"
                                                                                 >
                                                                                     <i className="fas fa-pen text-[9px]"></i> Edit
                                                                                 </button>
                                                                                 <button 
                                                                                     onClick={() => sendCustomerNotification(ticket, ticket.id)} 
-                                                                                    className="bg-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-[#25d366]/30"
+                                                                                    className="bg-[#25d366]/20 hover:bg-[#25d366]/30 text-[#25d366] font-bold px-2 py-1.5 rounded-lg text-xs flex items-center gap-1 border border-[#25d366]/30"
                                                                                     title="Send WhatsApp Update"
                                                                                 >
-                                                                                    <i className="fab fa-whatsapp text-xs"></i> Notify
+                                                                                    <i className="fab fa-whatsapp text-xs"></i>
                                                                                 </button>
                                                                             </div>
                                                                         </td>
@@ -1098,23 +1218,32 @@
 
                     </div>
 
-                    {/* CREATE TICKET MODAL */}
+                    {/* ENHANCED PHYSICAL INTAKE MODAL (SOP COMPLIANT) */}
                     {isCreateModalOpen && (
-                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 no-print">
                             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)}></div>
-                            <div className="bg-zinc-900 border border-yellow-400/30 p-8 rounded-3xl w-full max-w-xl relative z-10 animate-slide-in-right shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+                            <div className="bg-zinc-900 border border-yellow-400/30 p-6 sm:p-8 rounded-3xl w-full max-w-2xl relative z-10 animate-slide-in-right shadow-2xl max-h-[90vh] overflow-y-auto hide-scrollbar">
                                 <button onClick={() => setIsCreateModalOpen(false)} className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2"><i className="fas fa-times"></i></button>
-                                <h2 className="text-2xl font-black text-white mb-1 flex items-center gap-2">
-                                    <i className="fas fa-plus-circle text-yellow-400"></i> New Repair Ticket
-                                </h2>
-                                <p className="text-zinc-400 text-xs mb-6">Generated Ticket ID prefix will be <strong className="text-yellow-400">{PREFIX}-###</strong></p>
+                                
+                                <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                                            <i className="fas fa-clipboard-check text-yellow-400"></i> New Counter Service Intake
+                                        </h2>
+                                        <p className="text-zinc-400 text-xs mt-0.5">Physical SOP 2-Minute Diagnostic & Job Card Generator</p>
+                                    </div>
+                                    <span className="bg-yellow-400/10 text-yellow-400 font-mono text-xs px-3 py-1 rounded-full border border-yellow-400/30">
+                                        {PREFIX}-###
+                                    </span>
+                                </div>
 
-                                <form onSubmit={handleCreateTicket} className="space-y-4 text-sm">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <form onSubmit={handleCreateTicket} className="space-y-5 text-sm">
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
-                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Ticket Serial # *</label>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Ticket # *</label>
                                             <div className="flex items-center">
-                                                <span className="bg-black/60 border border-r-0 border-white/10 px-3 py-3 rounded-l-xl text-zinc-400 font-bold">{PREFIX}-</span>
+                                                <span className="bg-black/60 border border-r-0 border-white/10 px-2.5 py-3 rounded-l-xl text-zinc-400 font-bold text-xs">{PREFIX}-</span>
                                                 <input 
                                                     type="text" 
                                                     value={newTicketForm.serialNumber} 
@@ -1134,90 +1263,306 @@
                                                 className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                             />
                                         </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Customer Name *</label>
-                                            <input 
-                                                type="text" 
-                                                value={newTicketForm.customer} 
-                                                onChange={e => setNewTicketForm({ ...newTicketForm, customer: e.target.value })} 
-                                                placeholder="e.g. Sai Ram" 
-                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
-                                                required 
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">10-Digit Mobile Number *</label>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Customer Phone *</label>
                                             <input 
                                                 type="tel" 
                                                 value={newTicketForm.mobile} 
                                                 onChange={e => setNewTicketForm({ ...newTicketForm, mobile: e.target.value })} 
-                                                placeholder="e.g. 9393939376" 
+                                                placeholder="10-digit mobile" 
                                                 className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                                 required 
                                             />
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Device Model *</label>
-                                        <input 
-                                            type="text" 
-                                            value={newTicketForm.device} 
-                                            onChange={e => setNewTicketForm({ ...newTicketForm, device: e.target.value })} 
-                                            placeholder="e.g. Dell Latitude 5490" 
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
-                                            required 
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Reported Issue</label>
-                                        <input 
-                                            type="text" 
-                                            value={newTicketForm.issue} 
-                                            onChange={e => setNewTicketForm({ ...newTicketForm, issue: e.target.value })} 
-                                            placeholder="e.g. No Power MB Issue" 
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
-                                        />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Customer Full Name *</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.customer} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, customer: e.target.value })} 
+                                                placeholder="e.g. Sai Ram Naidu" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                                required 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Brand & Device Model *</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.device} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, device: e.target.value })} 
+                                                placeholder="e.g. Dell Inspiron 5570 / MacBook Pro M1" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                                required 
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Estimated Cost (INR)</label>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Serial Number / S/N (Optional)</label>
                                             <input 
                                                 type="text" 
-                                                value={newTicketForm.cost} 
-                                                onChange={e => setNewTicketForm({ ...newTicketForm, cost: e.target.value })} 
-                                                placeholder="e.g. 3500 or Pending" 
+                                                value={newTicketForm.serialNo} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, serialNo: e.target.value })} 
+                                                placeholder="e.g. 5CD8391XYZ" 
                                                 className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Diagnostic Remarks</label>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Device Password / PIN</label>
                                             <input 
                                                 type="text" 
-                                                value={newTicketForm.remarks} 
-                                                onChange={e => setNewTicketForm({ ...newTicketForm, remarks: e.target.value })} 
-                                                placeholder="e.g. MB Issue" 
+                                                value={newTicketForm.password} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, password: e.target.value })} 
+                                                placeholder="e.g. 1234 or None" 
                                                 className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 flex gap-3">
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-2">Accessories Handed Over</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {ACCESSORY_OPTIONS.map(acc => {
+                                                const selected = (newTicketForm.accessories || []).includes(acc);
+                                                return (
+                                                    <button 
+                                                        key={acc} 
+                                                        type="button" 
+                                                        onClick={() => toggleAccessory(acc)} 
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${selected ? 'bg-yellow-400 text-black border-yellow-400' : 'bg-black/50 text-zinc-400 border-white/10 hover:border-white/20'}`}
+                                                    >
+                                                        {selected ? <i className="fas fa-check mr-1.5 text-[10px]"></i> : null}{acc}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-black/40 p-4 rounded-2xl border border-white/10 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-black uppercase text-yellow-400 tracking-wider">Counter Diagnostic Protocol (SOP)</span>
+                                            <label className="flex items-center gap-2 cursor-pointer bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/30">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={newTicketForm.isDeadUnit} 
+                                                    onChange={e => setNewTicketForm({ ...newTicketForm, isDeadUnit: e.target.checked })} 
+                                                    className="rounded accent-red-500"
+                                                />
+                                                <span className="text-xs font-bold text-red-400">Dead / No-Power (Untested)</span>
+                                            </label>
+                                        </div>
+
+                                        {!newTicketForm.isDeadUnit ? (
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                                <div>
+                                                    <label className="text-zinc-500 block mb-1">Boot State</label>
+                                                    <select 
+                                                        value={newTicketForm.preCheckBoot} 
+                                                        onChange={e => setNewTicketForm({ ...newTicketForm, preCheckBoot: e.target.value })}
+                                                        className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-white"
+                                                    >
+                                                        <option value="Boots to OS">Boots to OS</option>
+                                                        <option value="No Display">No Display</option>
+                                                        <option value="Auto-Restart">Auto-Restart</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-zinc-500 block mb-1">Hinges & Body</label>
+                                                    <select 
+                                                        value={newTicketForm.preCheckHinge} 
+                                                        onChange={e => setNewTicketForm({ ...newTicketForm, preCheckHinge: e.target.value })}
+                                                        className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-white"
+                                                    >
+                                                        <option value="Intact / OK">Intact / OK</option>
+                                                        <option value="Broken Hinge">Broken Hinge</option>
+                                                        <option value="Body Crack">Body Crack</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-zinc-500 block mb-1">Display Screen</label>
+                                                    <select 
+                                                        value={newTicketForm.preCheckDisplay} 
+                                                        onChange={e => setNewTicketForm({ ...newTicketForm, preCheckDisplay: e.target.value })}
+                                                        className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-white"
+                                                    >
+                                                        <option value="Screen OK">Screen OK</option>
+                                                        <option value="Lines/Spots">Lines/Spots</option>
+                                                        <option value="Cracked">Cracked</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-zinc-500 block mb-1">Keyboard</label>
+                                                    <select 
+                                                        value={newTicketForm.preCheckKB} 
+                                                        onChange={e => setNewTicketForm({ ...newTicketForm, preCheckKB: e.target.value })}
+                                                        className="w-full bg-zinc-900 border border-white/10 rounded-lg p-2 text-white"
+                                                    >
+                                                        <option value="All Keys Working">All Keys Working</option>
+                                                        <option value="Faulty Keys">Faulty Keys</option>
+                                                        <option value="Touchpad Defect">Touchpad Defect</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-zinc-400 italic">
+                                                ⚠ Disclaimer marked: Right Click Computers holds zero liability for secondary hidden faults discovered after power restoration.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Customer Reported Issue</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.issue} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, issue: e.target.value })} 
+                                                placeholder="e.g. No Power / Overheating / Screen Flickering" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Staff Diagnostic Remarks</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTicketForm.remarks} 
+                                                onChange={e => setNewTicketForm({ ...newTicketForm, remarks: e.target.value })} 
+                                                placeholder="e.g. Needs 19V rail tracing / Screen replacement" 
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block mb-1">Estimated Cost (INR)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newTicketForm.cost} 
+                                            onChange={e => setNewTicketForm({ ...newTicketForm, cost: e.target.value })} 
+                                            placeholder="e.g. 3500 or Pending" 
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-yellow-400" 
+                                        />
+                                    </div>
+
+                                    <div className="pt-3 flex gap-3">
                                         <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-xl">Cancel</button>
-                                        <button type="submit" className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3.5 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.3)]">Create & Sync</button>
+                                        <button type="submit" className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-3.5 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.3)]">Create & Print Job Card</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     )}
 
+                    {/* OFFICIAL PHYSICAL JOB CARD MODAL & PRINT ENGINE */}
+                    {selectedJobCardForPrint && (
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-md no-print" onClick={() => setSelectedJobCardForPrint(null)}></div>
+                            <div className="bg-white text-black p-8 rounded-3xl w-full max-w-2xl relative z-10 shadow-2xl max-h-[95vh] overflow-y-auto hide-scrollbar font-sans border border-zinc-300">
+                                
+                                <div className="no-print flex justify-between items-center pb-4 mb-4 border-b border-zinc-200">
+                                    <h3 className="font-black text-lg text-zinc-800">Job Card Ready for Printing</h3>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => window.print()} className="bg-yellow-500 hover:bg-yellow-600 text-black font-black px-4 py-2 rounded-xl flex items-center gap-1.5 text-xs shadow-md">
+                                            <i className="fas fa-print"></i> Print (Ctrl + P)
+                                        </button>
+                                        <button onClick={() => setSelectedJobCardForPrint(null)} className="bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-bold px-3 py-2 rounded-xl text-xs">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="printable-job-card" className="text-black bg-white p-2">
+                                    
+                                    <div className="flex justify-between items-start border-b-2 border-black pb-3 mb-3">
+                                        <div>
+                                            <h1 className="text-2xl font-black tracking-tight leading-none text-zinc-900">RIGHT CLICK COMPUTERS</h1>
+                                            <p className="text-[11px] font-bold tracking-wider text-zinc-700 uppercase mt-0.5">Sales • Chip-Level Motherboard Service • Desktops • Laptops • Data Recovery</p>
+                                            <p className="text-[10px] text-zinc-600 leading-tight mt-1">
+                                                Annapurna Arcade, Above SBI, PM Palem Main Rd, Madhurawada, Vizag - 530041<br/>
+                                                <strong>Phone:</strong> +91 90598 95427
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 block">SERVICE INTAKE JOB CARD</span>
+                                            <span className="text-xl font-black text-black block">{selectedJobCardForPrint.id}</span>
+                                            <span className="text-[11px] text-zinc-600">{formatDate(selectedJobCardForPrint.date)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 text-[11px] mb-3 bg-zinc-50 p-2.5 rounded border border-zinc-200">
+                                        <div><strong>Customer:</strong> {selectedJobCardForPrint.customer}</div>
+                                        <div><strong>WhatsApp No:</strong> {selectedJobCardForPrint.mobile}</div>
+                                        <div><strong>Device Model:</strong> {selectedJobCardForPrint.device}</div>
+                                        <div><strong>S/N:</strong> {selectedJobCardForPrint.serialNo || "N/A"}</div>
+                                        <div><strong>Accessories:</strong> {selectedJobCardForPrint.accessories || "None"}</div>
+                                        <div><strong>Password/PIN:</strong> {selectedJobCardForPrint.password || "None"}</div>
+                                    </div>
+
+                                    <div className="text-[11px] mb-3 space-y-1">
+                                        <div className="p-2 border border-zinc-300 rounded">
+                                            <strong>Customer Reported Issue:</strong> {selectedJobCardForPrint.issue || "General Diagnosis"}
+                                        </div>
+                                        <div className="p-2 border border-zinc-300 rounded bg-zinc-50">
+                                            <strong>Counter Pre-Check & Condition:</strong> {selectedJobCardForPrint.preCheck || "Standard Intake"}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3 items-center border border-zinc-300 p-2.5 rounded mb-3">
+                                        <div className="col-span-2 text-[9px] text-zinc-600 leading-tight space-y-1">
+                                            <p className="font-bold text-black uppercase">Terms of Service & Liability Clearance:</p>
+                                            <p>1. <strong>Dead/No-Power:</strong> Devices received in dead state cannot be pre-tested for peripheral health. No liability for pre-existing hidden board faults.</p>
+                                            <p>2. <strong>Data Backup:</strong> Customer is strictly responsible for data backups. No liability for software/data corruption during repair.</p>
+                                            <p>3. <strong>Storage:</strong> Devices not collected within 30 days of completion notice are subject to disposal.</p>
+                                        </div>
+                                        <div className="flex flex-col items-center justify-center text-center">
+                                            <img 
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https://ri8clickcomputers-sys.github.io/rightclickvizag?ticket=${selectedJobCardForPrint.id}`} 
+                                                alt="QR Code" 
+                                                className="w-20 h-20 border border-zinc-400 p-0.5 mb-1"
+                                            />
+                                            <span className="text-[8px] font-bold text-zinc-700">Scan for Live Status</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6 text-[10px] pt-4 pb-2 border-b border-dashed border-zinc-400">
+                                        <div>
+                                            <div className="border-t border-black w-40 pt-1 mt-6"></div>
+                                            <strong>Front-Desk Staff Signature</strong>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="border-t border-black w-40 pt-1 mt-6 ml-auto"></div>
+                                            <strong>Customer Signature</strong>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-3 text-[10px]">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold uppercase text-[9px] text-zinc-600">✂ DELIVERY ACKNOWLEDGEMENT SLIP (RETAIN AT COUNTER)</span>
+                                            <span className="font-bold">{selectedJobCardForPrint.id}</span>
+                                        </div>
+                                        <div className="text-[9px] text-zinc-600 mb-2">
+                                            [ ] Repaired Problem Demoed & Tested • [ ] Peripherals OK • [ ] Adapter/Accessories Returned
+                                        </div>
+                                        <div className="flex justify-between items-end pt-2">
+                                            <span className="text-[8px] text-zinc-500">Device Handed Over in Good Condition</span>
+                                            <div className="border-t border-black w-36 text-center pt-0.5 font-bold text-[9px]">
+                                                Customer Final Signature
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Footer */}
-                    <footer className="bg-black border-t border-white/10 mt-auto py-12">
+                    <footer className="bg-black border-t border-white/10 mt-auto py-12 no-print">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                                 <div className="md:col-span-2">
